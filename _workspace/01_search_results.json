@@ -1,0 +1,92 @@
+{
+  "query_date": "2026-06-21",
+  "total_queried": 1,
+  "filtered_count": 1,
+  "properties": [
+    {
+      "cltrMngNo": "2026-01261-001",
+      "pbctCdtnNo": 5927307,
+      "onbidCltrNm": "충청남도 천안시 서북구 쌍용동 1538 월봉벽산태영아파트 제204동 제11층 제1103호",
+      "cltrAdr": "충청남도 천안시 서북구 월봉4로 140-14, 제204동 제11층 제1103호 (쌍용동, 월봉벽산태영아파트)",
+      "lctn": {
+        "sdnm": "충청남도",
+        "sggnm": "천안시 서북구",
+        "emdNm": "쌍용동"
+      },
+      "prptDivNm": "압류재산",
+      "dspsMthodNm": "매각",
+      "bidDivNm": "전자입찰",
+      "bidMthodNm": "최고가방식",
+      "cltrUsgSclsCtgrNm": "아파트",
+      "usbdNft": 0,
+      "pbctNsq": "022",
+      "cltrBidBgngDt": "202606221400",
+      "cltrBidEndDt": "202606241700",
+      "pbctStatCd": "0001",
+      "apslEvlAmt": 236000000,
+      "lowstBidPrcIndctCont": 212400000,
+      "lowstBidRatio": 90,
+      "landSqms": 45.4,
+      "bldSqms": 85,
+      "frstPbancYmd": "20260415",
+      "rqstOrgNm": "경기광주세무서",
+      "evcRsbyTrgtCont": "매수인",
+      "appraisal": {
+        "orgNm": "(주)감정평가법인 태백",
+        "evalDate": "20260402",
+        "amount": 236000000,
+        "pdfUrl": "https://www.onbid.co.kr/op/cm/syc/filemng/filemngprcs/FileMngPrcsController/dnldFile.do?atchFileLstNo=16989265&atchSn=1&hashCrpsNo=APJAONJNCNOIBNOKBHAJOOGOFIBJHGFBLDFCINIKIFNAOCEPJJPBNHFOIINCDDGN"
+      },
+      "registry": [
+        {
+          "type": "위임기관",
+          "name": "경기광주세무서",
+          "date": "20240326",
+          "amount": null
+        },
+        {
+          "type": "근저당권",
+          "name": "천*****",
+          "date": "20210818",
+          "amount": 184800000
+        }
+      ],
+      "debts": [
+        {
+          "type": "근저당권",
+          "claimAmt": 131342224,
+          "date": "20260326"
+        },
+        {
+          "type": "교부청구(국세)",
+          "claimAmt": 70468910,
+          "date": "20260420"
+        },
+        {
+          "type": "지방세",
+          "claimAmt": 330370,
+          "date": "20260522"
+        },
+        {
+          "type": "위임기관(체납세금)",
+          "claimAmt": 262247770,
+          "date": "20260211"
+        }
+      ],
+      "total_debts": 464389274,
+      "tenants": [
+        {
+          "type": "임차인",
+          "name": "임**",
+          "deposit": null,
+          "monthly": null,
+          "moveIn": "20210830",
+          "note": "폐문주재로 점유자 파악 불가, 대항력 여부 사전조사 필요"
+        }
+      ],
+      "propertyStatement": "천안시 서북구 쌍용동 현황 아파트. 전입세대주 이00(2021-08-30). 방문시 폐문주재 점유자 파악 불가.",
+      "priority_score": 10,
+      "priority_reason": "유찰0회 초회입찰, 내일(2026-06-22) 시작, 최저가 2억1,240만원(감정가90%)"
+    }
+  ]
+}
