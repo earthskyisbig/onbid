@@ -156,10 +156,7 @@ def fetch_all_trade_types(apt_keyword: str, lawd_cd: str,
             result["sale"] = {"count": cnt, "avg": avg, "min": pmin, "max": pmax}
         elif key == "jeonse":
             cnt = best["leaseCnt"]
-            pmin = best["dealPrcMin"]
-            pmax = best["dealPrcMax"]
-            avg  = ((pmin + pmax) // 2) if pmin and pmax else (pmin or pmax)
-            result["jeonse"] = {"count": cnt, "avg": avg, "min": pmin, "max": pmax}
+            result["jeonse"] = {"count": cnt, "avg": None, "min": None, "max": None}
         elif key == "wolse":
             result["wolse"]["count"] = best["rentCnt"]
 
