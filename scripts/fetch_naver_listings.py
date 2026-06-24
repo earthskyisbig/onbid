@@ -99,3 +99,102 @@ def search_complex(apt_keyword: str, lawd_cd: str, trade_type: str = "A1") -> li
             "dealPrcMax": parse_naver_price(item.get("dealPrcMax", "")),
         })
     return results
+
+
+def fetch_all_trade_types(apt_keyword: str, lawd_cd: str,
+                          target_area: float) -> dict:
+    """
+    매매(A1)/전세(B1)/월세(B2) 단지 데이터를 한 번에 수집.
+    target_area ± 10㎡ 범위 단지만 포함.
+
+    Returns:
+        {
+          "complex_name": str,
+          "complex_id": str,
+          "sale": {"count": int, "avg": int, "min": int, "max": int},
+          "jeonse": {"count": int, "avg": int, "min": int, "max": int},
+          "wolse": {"count": int},
+          "scope": "same_complex" | "not_found"
+        }
+    """
+    result = {
+        "complex_name": "",
+        "complex_id":   "",
+        "sale":   {"count": 0, "avg": None, "min": None, "max": None},
+        "jeonse": {"count": 0, "avg": None, "min": None, "max": None},
+        "wolse":  {"count": 0},
+        "scope":  "same_complex",
+    }
+
+    for trade_type, key in [("A1", "sale"), ("B1", "jeonse"), ("B2", "wolse")]:
+        time.sleep(random.uniform(0.5, 1.5))
+        complexes = search_complex(apt_keyword, lawd_cd, trade_type)
+
+        # 면적 필터
+        matched = [
+            c for c in complexes
+            if c["maxSpc"] >= (target_area - 10) and c["minSpc"] <= (target_area + 10)
+        ]
+        if not matched and complexes:
+            matched = complexes  # 면적 미매칭이면 전체 포함
+
+        if not matched:
+            if not result["complex_id"]:
+                result["scope"] = "not_found"
+            continue
+
+        best = matched[0]
+        if not result["complex_id"]:
+            result["complex_name"] = best["hscpNm"]
+            result["complex_id"]   = best["hscpNo"]
+
+        if key == "sale":
+            cnt = best["dealCnt"]
+            pmin = best["dealPrcMin"]
+            pmax = best["dealPrcMax"]
+            avg  = ((pmin + pmax) // 2) if pmin and pmax else (pmin or pmax)
+            result["sale"] = {"count": cnt, "avg": avg, "min": pmin, "max": pmax}
+        elif key == "jeonse":
+            cnt = best["leaseCnt"]
+            pmin = best["dealPrcMin"]
+            pmax = best["dealPrcMax"]
+            avg  = ((pmin + pmax) // 2) if pmin and pmax else (pmin or pmax)
+            result["jeonse"] = {"count": cnt, "avg": avg, "min": pmin, "max": pmax}
+        elif key == "wolse":
+            result["wolse"]["count"] = best["rentCnt"]
+
+    return result
+
+
+def calculate_gap(naver_data: dict, molit_trade_avg,
+                  apsl_amt) -> dict:
+    """
+    괴리율 계산.
+
+    Args:
+        naver_data: fetch_all_trade_types() 반환값
+        molit_trade_avg: 국토부 실거래 평균 (원, None 허용)
+        apsl_amt: 감정가 (원, None 허용)
+
+    Returns:
+        {
+          "naver_vs_molit_pct": float | None,   양수 = 호가 > 실거래
+          "naver_vs_apsl_pct":  float | None,   양수 = 호가 > 감정가
+          "jeonse_rate_pct":    float | None,   전세가율
+        }
+    """
+    sale_avg   = naver_data["sale"].get("avg")
+    jeonse_avg = naver_data["jeonse"].get("avg")
+
+    def pct(a, b):
+        if a and b and b > 0:
+            return round((a - b) / b * 100, 1)
+        return None
+
+    return {
+        "naver_vs_molit_pct": pct(sale_avg, molit_trade_avg),
+        "naver_vs_apsl_pct":  pct(sale_avg, apsl_amt),
+        "jeonse_rate_pct":    round(jeonse_avg / sale_avg * 100, 1)
+                              if (sale_avg and jeonse_avg)
+                              else None,
+    }
