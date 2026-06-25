@@ -38,6 +38,22 @@
 - 공시지가 추이 (최근 5년)
 - 평당(㎡) 단가 비교
 
+#### 4-2. 네이버 부동산 현재 호가 (naver-land-data 스킬)
+
+아파트 물건의 경우 MOLIT 실거래가 조회(4-1) 직후 실행:
+
+```bash
+python3 /Users/leo-myung/onbid/scripts/fetch_naver_listings.py \
+    --keyword "{단지명}" --lawd-cd "{5자리코드}" \
+    --area {전용면적} --apsl {감정가} \
+    --molit-avg {MOLIT평균} --cltr-mng-no "{물건관리번호}"
+```
+
+결과의 `gap_analysis`를 투자 평가에 반영:
+- `naver_vs_molit_pct` 양수: 호가 > 실거래 → 시세 상승 추세
+- `naver_vs_apsl_pct` 양수: 호가 > 감정가 → 낙찰 후 즉시 시세차익 가능
+- `jeonse_rate_pct` 70% 이상: 갭투자 위험 낮음
+
 ### 5. 리스크 요인
 - 혐오시설 (쓰레기매립장, 교도소 등)
 - 침수구역, 급경사지

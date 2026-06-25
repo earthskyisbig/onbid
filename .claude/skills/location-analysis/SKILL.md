@@ -34,6 +34,34 @@ params = {'serviceKey': unquote(os.getenv('MOLIT_API_KEY')), 'LAWD_CD': lawd_cd,
 
 최근 12개월치 조회 (월별 루프), 평당가 평균 계산
 
+### Step 2.5: 네이버 호가 조회 → **naver-land-data 스킬 사용**
+
+Step 2(MOLIT 실거래가)가 완료된 직후 실행한다.  
+아파트 물건에만 적용 (토지·상업용은 스킵).
+
+필요 입력값:
+- `apt_keyword`: 단지명 키워드 (물건명에서 아파트 단지명 추출)
+- `lawd_cd`: Step 1에서 파싱한 5자리 법정동코드
+- `target_area`: 물건 전용면적 (㎡)
+- `apsl_amt`: 감정가 (원)
+- `molit_trade_avg`: Step 2에서 얻은 MOLIT 실거래 평균 (없으면 생략)
+
+```bash
+python3 /Users/leo-myung/onbid/scripts/fetch_naver_listings.py \
+    --keyword "{apt_keyword}" \
+    --lawd-cd "{lawd_cd}" \
+    --area {target_area} \
+    --apsl {apsl_amt} \
+    --molit-avg {molit_trade_avg} \
+    --cltr-mng-no "{cltrMngNo}"
+```
+
+결과 파일: `_workspace/naver_listings_{cltrMngNo}.json`  
+→ `gap_analysis.naver_vs_molit_pct`, `gap_analysis.naver_vs_apsl_pct`,
+   `gap_analysis.jeonse_rate_pct` 값을 Step 4 종합 평가에 포함시킨다.
+
+---
+
 ### Step 3: 개발호재 조사 (웹 검색)
 다음 키워드로 검색:
 1. `"{시군구} 도시기본계획 2030 OR 2040"`
