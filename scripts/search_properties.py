@@ -168,7 +168,7 @@ def call_pbanc_cltr_api(pbanc_entries, pre_filter=None):
 
     for idx, entry in enumerate(pbanc_entries):
         no = entry.get('pbancMngNo') if isinstance(entry, dict) else entry
-        time.sleep(0.3)
+        time.sleep(1.0)
         if (idx + 1) % 20 == 0:
             print(f"    ...공고 {idx+1}/{len(pbanc_entries)} 처리 중 (통과 {len(cltr_nos)}건)")
         try:
@@ -263,7 +263,7 @@ def call_detail_api(cltr_mng_nos):
     errors = []
 
     for no in cltr_mng_nos:
-        time.sleep(0.5)
+        time.sleep(1.0)
         data = None
         for attempt in range(3):
             try:
