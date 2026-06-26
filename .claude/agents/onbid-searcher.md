@@ -14,16 +14,30 @@
 - 유찰횟수(usbdNft)가 높을수록 할인율이 크므로 투자 매력도 가중치 부여
 
 ## 입력 프로토콜
-오케스트레이터에서 다음 형태로 호출된다:
+
+### 방법 A: 필터 기반 검색 (search_properties.py 사용)
+```bash
+python3 /Users/leo-myung/onbid/scripts/search_properties.py \
+    --region "경기도 수원시" \
+    --type 아파트 \
+    --area-min 59 --area-max 85 \
+    --price-max 300000000 \
+    --min-fails 2 \
+    --status 진행중
 ```
-물건관리번호 목록: ["2024-1100-084555", "2025-NNNN-NNNNNN", ...]
-필터 조건:
-  - 재산유형: 부동산 (prptDivCd: 0007, 0003, 0006 등)
-  - 처분방식: 매각 (dspsMthodCd: 0001)
-  - 최대 최저입찰가격: X억
-  - 대상 지역: 시/구 키워드
+
+지원 필터: `--region`, `--type`, `--area-min/max`, `--price-min/max`, `--min-fails/max-fails`, `--status`
+
+### 방법 B: 물건관리번호 직접 조회
+```bash
+python3 /Users/leo-myung/onbid/scripts/search_properties.py \
+    --ids 2024-1100-084555 2025-NNNN-NNNNNN
 ```
+
 공고관리번호가 없으면 사용자에게 온비드(onbid.co.kr)에서 조회 후 제공 요청.
+
+> **목록 API 미구독 시**: `--ids` 없이 필터만 사용하면 403 오류.  
+> data.go.kr에서 "한국자산관리공사_온비드 공고목록 조회서비스" 구독 필요.
 
 ## 출력 프로토콜
 `_workspace/01_search_results.json` 저장:
@@ -96,33 +110,56 @@ def fetch_property(cltr_mng_no, pbct_cdtn_no=None):
     return (item if isinstance(item, list) else [item]), None
 
 def parse_property(item):
-    """실제 응답 필드 기준 (2026-06-21 검증)"""
-    # 감정평가금액: apslEvlClgList.apslEvlClg[0].apslEvlAmt
-    apsl_list = item.get('apslEvlClgList', {}).get('apslEvlClg', None)
-    apsl = (apsl_list[0] if isinstance(apsl_list, list) else apsl_list) or {}
+    """실제 응답 필드 기준 (2026-06-24 검증)
+    
+    주요 변경사항:
+    - cltrAdr: null 빈번 → zadrNm 또는 lctnSdnm+lctnSggnm+lctnEmdNm 조합 사용
+    - apslEvlAmt: 최상위 필드에 직접 존재 (apslEvlClgList 파싱 불필요)
+    - bldSqms/landSqms: 면적 직접 필드 (cltrPrclList는 null인 경우 많음)
+    - pbctStatNm: 코드값 반환 버그 → STATUS_NAME 매핑으로 이름 변환 필요
+    """
+    stat_cd = item.get('pbctStatCd', '')
+    STATUS_NAME = {
+        '0001':'입찰준비중','0002':'입찰진행중','0003':'입찰마감',
+        '0009':'수의계약가능','0010':'낙찰','0011':'유찰','0012':'취소',
+    }
+    stat_nm_raw = item.get('pbctStatNm', '')
+    stat_nm = STATUS_NAME.get(stat_nm_raw, stat_nm_raw)
+
+    addr = (item.get('zadrNm') or item.get('cltrAdr') or item.get('cltrRadr') or
+            ' '.join(filter(None, [item.get('lctnSdnm'), item.get('lctnSggnm'), item.get('lctnEmdNm')])))
+
+    apsl_list_raw = item.get('apslEvlClgList', [])
+    if isinstance(apsl_list_raw, list) and apsl_list_raw:
+        apsl = apsl_list_raw[0]
+    else:
+        apsl = {}
 
     return {
-        'cltrMngNo': item.get('cltrMngNo'),
+        'cltrMngNo':   item.get('cltrMngNo'),
         'onbidCltrNm': item.get('onbidCltrNm'),
-        'cltrAdr': item.get('cltrAdr') or item.get('cltrRadr'),
-        'prptDivNm': item.get('prptDivNm'),
-        'cltrUsgSclsCtgrNm': item.get('cltrUsgSclsCtgrNm'),  # 아파트/임야 등
-        'apslEvlAmt': apsl.get('apslEvlAmt'),
+        'cltrAdr':     addr,
+        'lctnSdnm':    item.get('lctnSdnm'),
+        'lctnSggnm':   item.get('lctnSggnm'),
+        'prptDivNm':   item.get('prptDivNm'),
+        'cltrUsgSclsCtgrNm': item.get('cltrUsgSclsCtgrNm'),
+        'apslEvlAmt':  item.get('apslEvlAmt'),         # 직접 필드
         'apslEvlOrgNm': apsl.get('apslEvlOrgNm'),
-        'apslEvlYmd': apsl.get('apslEvlYmd'),
-        'apslEvlUrl': apsl.get('urlAdr'),          # 감정평가서 PDF URL
+        'apslEvlYmd':  apsl.get('apslEvlYmd'),
+        'apslEvlUrl':  apsl.get('urlAdr'),
+        'bldSqms':     item.get('bldSqms'),            # 건물 면적
+        'landSqms':    item.get('landSqms'),           # 토지 면적
+        'sqmsList':    item.get('sqmsList'),           # 상세 면적 목록
         'lowstBidPrcIndctCont': item.get('lowstBidPrcIndctCont'),
         'apslPrcCtrsLowstBidRto': item.get('apslPrcCtrsLowstBidRto'),
-        'usbdNft': item.get('usbdNft', 0),
-        'pbctStatCd': item.get('pbctStatCd'),
-        'pbctStatNm': item.get('pbctStatNm'),
+        'usbdNft':     item.get('usbdNft', 0),
+        'pbctStatCd':  stat_cd,
+        'pbctStatNm':  stat_nm,
         'cltrBidBgngDt': item.get('cltrBidBgngDt'),
-        'cltrBidEndDt': item.get('cltrBidEndDt'),
-        'pbctNsq': item.get('pbctNsq'),            # 회차
-        'leasInfList': item.get('leasInfList'),    # 임대차정보
-        'rgstMtrList': item.get('rgstMtrList'),    # 등기사항
-        'cltrPrclList': item.get('cltrPrclList'),  # 면적정보
-        'potoUrlList': item.get('potoUrlList'),    # 사진URL
+        'cltrBidEndDt':  item.get('cltrBidEndDt'),
+        'pbctNsq':     item.get('pbctNsq'),
+        'leasInfList': item.get('leasInfList'),
+        'potoUrlList': item.get('potoUrlList'),
     }
 ```
 

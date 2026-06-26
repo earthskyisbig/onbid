@@ -195,3 +195,83 @@ def calculate_gap(naver_data: dict, molit_trade_avg,
                               if (sale_avg and jeonse_avg)
                               else None,
     }
+
+
+def fetch_with_fallback(apt_keyword: str, lawd_cd: str,
+                        target_area: float) -> tuple:
+    """
+    경로 A(직접 API) 시도 → not_found면 neighborhood 확장.
+    Returns: (naver_data, method_used)
+    """
+    import requests
+    try:
+        data = fetch_all_trade_types(apt_keyword, lawd_cd, target_area)
+        if data["scope"] != "not_found":
+            return data, "direct_api"
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code in (403, 429):
+            print(f"[!] Naver API 차단 ({e.response.status_code}) → fallback 미구현")
+        raise
+
+    # scope = not_found: 시군구 전체로 확장 (면적 필터 완화)
+    print("[!] 동일 단지 매물 없음 → 시군구 전체 확장")
+    data2 = fetch_all_trade_types(apt_keyword, lawd_cd, target_area=999)
+    data2["scope"] = "neighborhood" if data2["complex_id"] else "not_found"
+    return data2, "direct_api_neighborhood"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="네이버 부동산 호가 조회")
+    parser.add_argument("--keyword",      required=True, help="단지명 키워드")
+    parser.add_argument("--lawd-cd",      required=True, help="5자리 법정동코드")
+    parser.add_argument("--area",         type=float, default=0, help="전용면적 ㎡")
+    parser.add_argument("--apsl",         type=float, default=None, help="감정가 (원)")
+    parser.add_argument("--molit-avg",    type=float, default=None, help="MOLIT 실거래 평균 (원)")
+    parser.add_argument("--cltr-mng-no",  default="UNKNOWN", help="물건관리번호")
+    parser.add_argument("--output",       default=None, help="출력 JSON 경로")
+    args = parser.parse_args()
+
+    out_path = args.output or (
+        f"/Users/leo-myung/onbid/_workspace/naver_listings_{args.cltr_mng_no}.json"
+    )
+
+    print(f"\n네이버 호가 조회: {args.keyword} / lawd_cd={args.lawd_cd} / 면적={args.area}㎡")
+
+    naver_data, method = fetch_with_fallback(args.keyword, args.lawd_cd, args.area)
+    gap = calculate_gap(naver_data, args.molit_avg, args.apsl)
+
+    output = {
+        "fetched_at":   datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "method":       method,
+        "complex_name": naver_data["complex_name"],
+        "complex_id":   naver_data["complex_id"],
+        "scope":        naver_data["scope"],
+        "sale":         naver_data["sale"],
+        "jeonse":       naver_data["jeonse"],
+        "wolse":        naver_data["wolse"],
+        "gap_analysis": gap,
+    }
+
+    out_dir = os.path.dirname(out_path)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+
+    # 콘솔 요약
+    s = naver_data["sale"]
+    g = gap
+    print(f"  단지: {naver_data['complex_name']} (scope={naver_data['scope']})")
+    if s["avg"]:
+        print(f"  매매 호가: {s['avg']//10000:,}만원 ({s['count']}건)")
+    if g["naver_vs_molit_pct"] is not None:
+        print(f"  vs 실거래가: {g['naver_vs_molit_pct']:+.1f}%")
+    if g["naver_vs_apsl_pct"] is not None:
+        print(f"  vs 감정가:   {g['naver_vs_apsl_pct']:+.1f}%")
+    if g["jeonse_rate_pct"] is not None:
+        print(f"  전세가율:    {g['jeonse_rate_pct']:.1f}%")
+    print(f"  저장: {out_path}")
+
+
+if __name__ == "__main__":
+    main()
