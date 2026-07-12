@@ -1,92 +1,359 @@
 {
-  "query_date": "2026-06-21",
-  "total_queried": 1,
-  "filtered_count": 1,
-  "properties": [
+  "query_date": "2026-06-26 22:49",
+  "filters": {
+    "region": "경기도",
+    "type": "아파트",
+    "area_min": 59.0,
+    "area_max": 85.0,
+    "price_min": null,
+    "price_max": 300000000.0,
+    "min_fails": 2,
+    "max_fails": null,
+    "status": "모두"
+  },
+  "total_fetched": 0,
+  "filtered_count": 0,
+  "properties": [],
+  "errors": [
     {
-      "cltrMngNo": "2026-01261-001",
-      "pbctCdtnNo": 5927307,
-      "onbidCltrNm": "충청남도 천안시 서북구 쌍용동 1538 월봉벽산태영아파트 제204동 제11층 제1103호",
-      "cltrAdr": "충청남도 천안시 서북구 월봉4로 140-14, 제204동 제11층 제1103호 (쌍용동, 월봉벽산태영아파트)",
-      "lctn": {
-        "sdnm": "충청남도",
-        "sggnm": "천안시 서북구",
-        "emdNm": "쌍용동"
-      },
-      "prptDivNm": "압류재산",
-      "dspsMthodNm": "매각",
-      "bidDivNm": "전자입찰",
-      "bidMthodNm": "최고가방식",
-      "cltrUsgSclsCtgrNm": "아파트",
-      "usbdNft": 0,
-      "pbctNsq": "022",
-      "cltrBidBgngDt": "202606221400",
-      "cltrBidEndDt": "202606241700",
-      "pbctStatCd": "0001",
-      "apslEvlAmt": 236000000,
-      "lowstBidPrcIndctCont": 212400000,
-      "lowstBidRatio": 90,
-      "landSqms": 45.4,
-      "bldSqms": 85,
-      "frstPbancYmd": "20260415",
-      "rqstOrgNm": "경기광주세무서",
-      "evcRsbyTrgtCont": "매수인",
-      "appraisal": {
-        "orgNm": "(주)감정평가법인 태백",
-        "evalDate": "20260402",
-        "amount": 236000000,
-        "pdfUrl": "https://www.onbid.co.kr/op/cm/syc/filemng/filemngprcs/FileMngPrcsController/dnldFile.do?atchFileLstNo=16989265&atchSn=1&hashCrpsNo=APJAONJNCNOIBNOKBHAJOOGOFIBJHGFBLDFCINIKIFNAOCEPJJPBNHFOIINCDDGN"
-      },
-      "registry": [
-        {
-          "type": "위임기관",
-          "name": "경기광주세무서",
-          "date": "20240326",
-          "amount": null
-        },
-        {
-          "type": "근저당권",
-          "name": "천*****",
-          "date": "20210818",
-          "amount": 184800000
-        }
-      ],
-      "debts": [
-        {
-          "type": "근저당권",
-          "claimAmt": 131342224,
-          "date": "20260326"
-        },
-        {
-          "type": "교부청구(국세)",
-          "claimAmt": 70468910,
-          "date": "20260420"
-        },
-        {
-          "type": "지방세",
-          "claimAmt": 330370,
-          "date": "20260522"
-        },
-        {
-          "type": "위임기관(체납세금)",
-          "claimAmt": 262247770,
-          "date": "20260211"
-        }
-      ],
-      "total_debts": 464389274,
-      "tenants": [
-        {
-          "type": "임차인",
-          "name": "임**",
-          "deposit": null,
-          "monthly": null,
-          "moveIn": "20210830",
-          "note": "폐문주재로 점유자 파악 불가, 대항력 여부 사전조사 필요"
-        }
-      ],
-      "propertyStatement": "천안시 서북구 쌍용동 현황 아파트. 전입세대주 이00(2021-08-30). 방문시 폐문주재 점유자 파악 불가.",
-      "priority_score": 10,
-      "priority_reason": "유찰0회 초회입찰, 내일(2026-06-22) 시작, 최저가 2억1,240만원(감정가90%)"
+      "pbancMngNo": "202603-03105-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-03102-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-02995-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-03093-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-03085-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-03082-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-02922-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58540-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58570-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58523-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58443-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58519-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58506-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58558-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58553-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58550-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58548-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58544-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60131-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60126-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-59996-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60082-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60074-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-59585-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60114-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60061-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60113-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60108-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60103-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60050-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-60006-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-01014-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-01001-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-00999-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-00990-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-00983-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-01049-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-00978-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-01045-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-01041-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-00873-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-00961-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202603-01024-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-00271-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-00176-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-55329-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56412-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56376-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56409-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56288-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56395-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56358-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56390-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56429-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56452-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56421-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56416-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-56413-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202602-58436-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-57379-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54331-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54285-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54329-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54360-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54317-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54356-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54222-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54350-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54218-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54342-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54288-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202601-54367-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52993-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52992-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52952-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52985-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52886-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52979-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52975-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52972-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52968-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52910-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52957-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202512-52995-00",
+      "error": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "pbancMngNo": "202508-31902-01",
+      "error": "Expecting value: line 1 column 1 (char 0)"
     }
   ]
 }
