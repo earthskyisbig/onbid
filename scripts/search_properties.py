@@ -415,12 +415,13 @@ def apply_filters(items, args):
     type_kw = args.type or ''
     # 공식 매핑에서 검색 키워드 가져오기
     type_search_nm = ''
-    for k, v in PROPERTY_TYPE_MAP.items():
-        if k in type_kw or type_kw in k:
-            type_search_nm = v.get('cltrUsgSclsCtgrNm') or v.get('cltrUsgMclsCtgrNm') or type_kw
-            break
-    if not type_search_nm:
-        type_search_nm = type_kw  # 직접 키워드 사용
+    if type_kw:
+        for k, v in PROPERTY_TYPE_MAP.items():
+            if k in type_kw or type_kw in k:
+                type_search_nm = v.get('cltrUsgSclsCtgrNm') or v.get('cltrUsgMclsCtgrNm') or type_kw
+                break
+        if not type_search_nm:
+            type_search_nm = type_kw  # 직접 키워드 사용
 
     for raw in items:
         item = normalize_item(raw) if 'cltrMngNo' not in raw else raw
