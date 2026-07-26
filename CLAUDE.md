@@ -18,6 +18,7 @@
 | location-analyst | 입지·개발호재·시세 분석 |
 | bid-strategist | 입찰가 산정·수익성 분석 |
 | report-generator | 최종 투자보고서 생성 |
+| data-verifier | 검색결과(회차·용도·가격)·입찰전략(계산 입력값) 재검증. Phase 1.5, 3.5에서 호출 |
 
 **변경 이력:**
 | 날짜 | 변경 내용 | 대상 | 사유 |
@@ -26,3 +27,5 @@
 | 2026-06-21 | API 엔드포인트 수정 | onbid-searcher, onbid-search | 실제 승인 서비스는 SVC-004(OnbidRlstDtlSrvc2/getRlstDtlInf2), cltrMngNo 필수 |
 | 2026-06-21 | 응답 구조 수정 | onbid-searcher, onbid-search | 응답 루트 header/body (response 래퍼 없음), 감정평가금액은 apslEvlClgList.apslEvlClg[0].apslEvlAmt |
 | 2026-06-21 | molit-market-data 스킬 신규 추가 | skills/molit-market-data | 국토부 아파트 매매·전월세 실거래가 API 조회 스킬화 (RTMSDataSvcAptTradeDev + RTMSDataSvcAptRent). location-analysis Step 2에서 호출, bid-analysis 입력으로 연결 |
+| 2026-07-26 | onbid-ranking-stats 스킬 신규 추가 | skills/onbid-ranking-stats, scripts/fetch_ranking_stats.py | 순위물건목록(조회수/관심물건/저감률), 부동산 물건목록, 물건 입찰결과상세, 용도별 입찰통계 6개 API 활용신청 승인. 오퍼레이션명이 docx 가이드에만 있어 실제 호출로 전부 검증 후 구현 (getInqRnkClg, getItrsCltrRnkClg, get50PctDecrCltr, getRlstCltrList2, getCltrBidRsltDtl2, getKamcoCltrUsgStats/getOrgCltrUsgStats) |
+| 2026-07-26 | search_properties.py 회차선택 버그 수정 | scripts/search_properties.py, agents/data-verifier.md, skills/onbid-auction-orchestrator | 동일 cltrMngNo 다회차 dedup 시 pbctNsq(회차번호) 최댓값을 "최신"으로 오판 — 실제로는 미래 최다할인 예약회차였음. cltrBidBgngDt 최솟값(가장 이른 예정회차) 기준으로 수정. 재발 방지용 data-verifier 에이전트 신설, 오케스트레이터에 Phase 1.5/3.5 검증 단계 추가 |

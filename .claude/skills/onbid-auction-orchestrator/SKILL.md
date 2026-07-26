@@ -7,8 +7,10 @@ description: 온비드 공매 투자 전체 워크플로우를 조율하는 오�
 
 ## 실행 모드: 하이브리드
 - Phase 1 (검색): 서브에이전트 단독
+- Phase 1.5 (검증): 서브에이전트 단독 — Phase 1 결과의 회차·용도·가격 재검증
 - Phase 2 (분석): 에이전트 팀 병렬 (document-analyzer + location-analyst)
 - Phase 3 (전략): 서브에이전트 단독
+- Phase 3.5 (검증): 서브에이전트 단독 — Phase 3 계산 입력값이 원본 데이터와 일치하는지 재검증
 - Phase 4 (보고서): 서브에이전트 단독
 
 ## Phase 0: 컨텍스트 확인
@@ -47,6 +49,28 @@ Agent(
 ```
 
 **완료 조건**: `_workspace/01_search_results.json` 생성, 최소 1개 물건 포함
+
+## Phase 1.5: 검색 결과 검증
+**실행 모드**: 서브에이전트 (data-verifier)
+
+```
+Agent(
+  name: "data-verifier-phase1",
+  subagent_type: "general-purpose",
+  model: "opus",
+  prompt: """
+  data-verifier 에이전트 정의(.claude/agents/data-verifier.md)의
+  "1. 회차 선택 검증", "2. 가격 논리성 검증", "3. 용도 분류 일치 검증"을
+  _workspace/01_search_results.json의 모든 물건에 대해 수행하라.
+
+  FAIL이 있으면 해당 물건을 목록에서 제외하거나 명확히 표기하고,
+  _workspace/verification_report_phase1.json에 결과를 저장하라.
+  FAIL이 있으면 Phase 2로 넘어가기 전에 사용자에게 먼저 보고하라.
+  """
+)
+```
+
+**완료 조건**: `_workspace/verification_report_phase1.json` 생성, FAIL 없음 (있으면 사용자 확인 후 진행)
 
 ## Phase 2: 병렬 서류분석 + 입지분석
 **실행 모드**: 에이전트 팀 (parallel)
@@ -113,6 +137,28 @@ Agent(
 )
 ```
 
+## Phase 3.5: 입찰전략 검증
+**실행 모드**: 서브에이전트 (data-verifier)
+
+```
+Agent(
+  name: "data-verifier-phase3",
+  subagent_type: "general-purpose",
+  model: "opus",
+  prompt: """
+  data-verifier 에이전트 정의(.claude/agents/data-verifier.md)의
+  "4. 하위 단계 입력값 대조"를 수행하라.
+
+  _workspace/03_bid_strategy_*.json의 appraisalValue/bidPrice 기준값이
+  _workspace/01_search_results.json 원본 값과 정확히 일치하는지 물건별로 대조하고,
+  _workspace/verification_report_phase3.json에 결과를 저장하라.
+  FAIL이 있으면 Phase 4로 넘어가기 전에 사용자에게 먼저 보고하라.
+  """
+)
+```
+
+**완료 조건**: `_workspace/verification_report_phase3.json` 생성, FAIL 없음 (있으면 사용자 확인 후 진행)
+
 ## Phase 4: 최종 보고서 생성
 **실행 모드**: 서브에이전트 (report-generator)
 
@@ -138,11 +184,15 @@ Agent(
 사용자 입력 (공고번호, 조건, PDF)
     ↓
 _workspace/01_search_results.json
+    ↓
+_workspace/verification_report_phase1.json  ← 회차·용도·가격 검증
     ↓ (분기: 물건별 병렬)
 _workspace/02_doc_analysis_{id}.json     }
 _workspace/02_location_analysis_{id}.json } → 병렬 생성
     ↓
 _workspace/03_bid_strategy_{id}.json
+    ↓
+_workspace/verification_report_phase3.json  ← 계산 입력값 대조
     ↓
 _workspace/final_report_{날짜}.md
 _workspace/final_report_{날짜}_summary.md

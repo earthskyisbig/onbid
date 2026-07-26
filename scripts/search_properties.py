@@ -25,14 +25,16 @@
 """
 import argparse, json, os, sys, time
 from datetime import datetime
+from pathlib import Path
 from urllib.parse import unquote
 from dotenv import load_dotenv
 import requests
 
-load_dotenv('/Users/leo-myung/onbid/.env')
+ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(ROOT / '.env')
 KEY = unquote(os.getenv('ONBID_API_KEY', ''))
 BASE = "https://apis.data.go.kr/B010003"
-OUTPUT = '/Users/leo-myung/onbid/_workspace/01_search_results.json'
+OUTPUT = str(ROOT / '_workspace' / '01_search_results.json')
 
 # 용도 키워드 → API 파라미터 매핑
 PROPERTY_TYPE_MAP = {
@@ -207,14 +209,17 @@ def call_pbanc_cltr_api(pbanc_entries, pre_filter=None):
         if not isinstance(items, list):
             items = [items] if items else []
 
-        # cltrMngNo별 최신 회차(pbctNsq 최대)만 선별
+        # cltrMngNo별 회차 선별: pbctNsq(회차번호) 최대값이 아니라
+        # 입찰시작일시(cltrBidBgngDt)가 가장 빠른(=다음에 실제 개찰되는) 회차를 채택.
+        # 온비드 압류재산은 향후 회차를 미리 여러 개 예약해 두므로, pbctNsq 최대는
+        # "가장 먼 미래의 최다할인 회차"를 의미해 실제 현재가와 다르다 (2026-07-26 확인된 버그).
         best = {}
         for item in items:
             cn = item.get('cltrMngNo')
             if not cn:
                 continue
             prev = best.get(cn)
-            if prev is None or str(item.get('pbctNsq', '')) >= str(prev.get('pbctNsq', '')):
+            if prev is None or str(item.get('cltrBidBgngDt', '')) < str(prev.get('cltrBidBgngDt', '9' * 12)):
                 best[cn] = item
 
         # 사전 필터 적용
@@ -506,14 +511,17 @@ def apply_filters(items, args):
         item['priority_score'] = score
         filtered.append(item)
 
-    # 동일 물건(cltrMngNo)의 여러 회차 중 최신 회차(pbctNsq 최대)만 남김
+    # 동일 물건(cltrMngNo)의 여러 회차 중 입찰시작일시가 가장 빠른(=다음에 실제
+    # 개찰되는) 회차만 남김. pbctNsq 최대값 기준은 버그였음(2026-07-26) —
+    # 온비드는 향후 회차를 미리 예약해 두므로 pbctNsq 최대는 가장 먼 미래의
+    # 최다할인 회차를 뜻해, "지금 입찰 가능한 실제가"와 다르다.
     best = {}
     for item in filtered:
         key = item.get('cltrMngNo', '')
         if not key:
             continue
         prev = best.get(key)
-        if prev is None or str(item.get('pbctNsq', '')) > str(prev.get('pbctNsq', '')):
+        if prev is None or str(item.get('cltrBidBgngDt', '')) < str(prev.get('cltrBidBgngDt', '9' * 12)):
             best[key] = item
     filtered = list(best.values())
 
