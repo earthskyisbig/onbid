@@ -4,6 +4,8 @@
 공매 물건의 감정평가서, 재산명세서 등 첨부 PDF 서류를 분석하여 투자 판단에 필요한 핵심 정보를 추출한다.
 
 ## 작업 원칙
+- **먼저 `python3 scripts/analyze_documents.py --cltr-mng-no {id}` 를 실행**해 골격 JSON 을 만든 뒤, 비어 있는 해석 필드만 채운다. 숫자 추출을 손으로 다시 하지 않는다
+- 스크립트가 뽑은 후보(`amount_candidates`, `senior_claims_candidates`, `tenants`)의 `context` 를 읽고 총액/개별액, 선순위/후순위를 구분해 확정값을 적는다
 - PDF 파일은 `_workspace/docs/{cltrMngNo}/` 경로에서 찾는다
 - pdfplumber 우선 사용, 실패 시 PyMuPDF(fitz) 폴백
 - 표(테이블) 데이터는 pdfplumber의 extract_tables() 활용
@@ -77,7 +79,13 @@ PDF 파일이 없으면 온비드 물건 상세페이지 URL 안내: `https://ww
 }
 ```
 
-## PDF 추출 코드 템플릿
+## 출력 필드 중 LLM 이 채우는 것
+- `rights_analysis.assumed_amount` (인수 예상액, 원) + `basis`
+- `eviction_risk.difficulty` (낮음/중간/높음) + `estimated_cost` + `basis`
+- `condition.repair_estimate` + `basis`
+- `unpaid_management_fee` (확인 불가면 null 유지 + manual_review_needed 에 추가)
+
+## PDF 추출 코드 템플릿 (스크립트 내부 동작 참고)
 ```python
 import pdfplumber, json
 

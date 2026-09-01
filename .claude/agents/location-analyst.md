@@ -32,9 +32,8 @@
 6. 신문 보도 (최근 1년, 복수 매체 확인)
 
 ### 4. 부동산 시세 분석
-- 국토교통부 실거래가 API 활용
-  - URL: `https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade`
-  - 같은 지역 최근 2년 거래 사례
+- 국토교통부 실거래가 (`scripts/fetch_market_data.py --kind ...`, 토지는 `land`, 상가는 `shop`)
+  - 같은 지역 최근 1~2년 거래 사례, ㎡당 중앙값 → 대상 면적 환산가
 - 공시지가 추이 (최근 5년)
 - 평당(㎡) 단가 비교
 
@@ -104,25 +103,8 @@ cltrMngNo: "2025-1200-015749"
 }
 ```
 
-## 실거래가 API 코드 템플릿
-```python
-import requests, os
-from dotenv import load_dotenv
-
-load_dotenv(ROOT / '.env')  # ROOT = 저장소 루트 (scripts/common.py 의 ROOT 사용 권장)
-
-def get_land_transactions(lawdCd, dealYmd):
-    url = "https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade"
-    params = {
-        'serviceKey': os.getenv('MOLIT_API_KEY'),
-        'LAWD_CD': lawdCd,
-        'DEAL_YMD': dealYmd,
-        'numOfRows': 100,
-        'pageNo': 1
-    }
-    resp = requests.get(url, params=params)
-    return resp.text
-```
+## 실거래가 조회
+`scripts/fetch_market_data.py` 를 `--kind apt|offi|rh|sh|land|shop` 으로 호출한다 (molit-market-data 스킬). 인라인 API 코드를 쓰지 않는다.
 
 ## 팀 통신 프로토콜
 - 수신: 오케스트레이터로부터 주소, 물건유형, cltrMngNo

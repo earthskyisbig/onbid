@@ -7,6 +7,20 @@ description: 국토교통부 아파트 매매·전월세 실거래가 API로 시
 
 구현체: `scripts/fetch_market_data.py` (CLI). 인라인 코드를 다시 쓰지 말고 스크립트를 호출한다.
 
+## 물건 종류 (`--kind`, 2026-09-02 전부 승인·실호출 확인)
+
+| kind | 대상 | API | 키워드 매칭 필드 | 면적 필드 | 전월세 |
+|------|------|-----|----------------|----------|-------|
+| `apt` (기본) | 아파트 | AptTradeDev(+AptTrade) / AptRent | aptNm | excluUseAr | ○ |
+| `offi` | 오피스텔 | OffiTrade / OffiRent | offiNm | excluUseAr | ○ |
+| `rh` | 연립·다세대 | RHTrade / RHRent | mhouseNm(건물명) | excluUseAr | ○ |
+| `sh` | 단독·다가구 | SHTrade / SHRent | umdNm, houseType | totalFloorAr | ○ |
+| `land` | 토지 | LandTrade | umdNm, jimok, landUse | dealArea | × |
+| `shop` | 상업·업무용 | NrgTrade | umdNm, buildingUse, buildingType | buildingAr | × |
+
+온비드 `cltrUsgSclsCtgrNm` → kind: 아파트→apt, 오피스텔→offi, 다세대주택·연립주택→rh, 단독주택·다가구→sh, 대지·임야·전·답→land, 근린생활시설·상가·사무실→shop.
+`land`/`shop` 은 ㎡당 중앙값(`price_per_sqm_median`)과 대상 면적 환산가(`implied_value_at_target_area`)를 내며, 감정가·최저가 비교는 환산가 기준이다. 면적 편차가 크므로 `--area-tol` 을 넉넉히(토지 ±300~500㎡).
+
 ## API 정보
 
 | 구분 | 매매 | 전월세 |
@@ -27,7 +41,9 @@ python3 scripts/fetch_market_data.py \
     --apsl 339000000 --low-bid 305100000 --cltr-mng-no 2026-0200-106923
 
 # 지역명으로 코드 지정 가능 (스크립트 내 LAWD_CD 표: 경기 전역 + 서울 25구)
-python3 scripts/fetch_market_data.py --keyword 메트로타운 --lawd-cd "서울 금천구" --area 25.41
+python3 scripts/fetch_market_data.py --kind offi --keyword 메트로타운 --lawd-cd "서울 금천구" --area 25.41
+python3 scripts/fetch_market_data.py --kind rh --keyword 호안빌 --lawd-cd "서울 은평구" --area 39.94
+python3 scripts/fetch_market_data.py --kind land --keyword 검천리 --lawd-cd 41610 --area 500 --area-tol 400
 
 # 배치
 python3 scripts/fetch_market_data.py --batch targets.json   # [{"cltr_mng_no","keyword","lawd_cd","area","apsl","low_bid"}, ...]
@@ -45,13 +61,13 @@ python3 scripts/fetch_market_data.py --batch targets.json   # [{"cltr_mng_no","k
 ## 단지명 키워드 잡는 법
 - 물건명에서 아파트 단지명만 추출: "양주시 덕계동 123 덕계역금강펜테리움 101동 501호" → `덕계역금강펜테리움`
 - API `aptNm` 은 부분일치이므로 너무 짧은 키워드("푸르지오")는 다른 단지가 섞인다 → 결과 `trade[].aptNm` 을 확인해 필요하면 키워드를 길게
-- 다세대·오피스텔은 아파트 API 에 없다 → 0건이면 "아파트 실거래 API 대상 아님" 으로 표기하고 location-analysis 의 토지/연립 API 또는 네이버 호가로 대체
+- 다세대·오피스텔·토지·상가는 `--kind` 를 바꿔 조회한다 (apt 로 조회하면 0건). `rh`/`sh` 는 건물명이 등록되지 않은 경우가 많으니 0건이면 키워드를 읍면동명으로 바꿔 지역 시세라도 확보
 
 ## 출력 (`_workspace/market_{cltrMngNo}.json`)
 
 ```json
 {
-  "fetched_at": "...", "apt_keyword": "...", "lawd_cd": "41630", "target_area": 59.3,
+  "fetched_at": "...", "kind": "apt", "kind_label": "아파트", "apt_keyword": "...", "lawd_cd": "41630", "target_area": 59.3,
   "apsl_amt": 339000000, "low_bid": 305100000,
   "query_months": 12, "area_tol": 5.0, "period": "202510 ~ 202609",
   "summary": {

@@ -5,12 +5,20 @@ description: 공매 물건의 감정평가서, 재산명세서, 토지이음 자
 
 # 공매 첨부서류 분석 스킬
 
-## 환경 준비
+## 구현체 (먼저 실행)
 ```bash
-pip install pdfplumber PyMuPDF python-dotenv 2>/dev/null | tail -1
+python3 scripts/analyze_documents.py --cltr-mng-no {cltrMngNo}            # _workspace/docs/{id}/*.pdf → 02_doc_analysis_{id}.json 골격
+python3 scripts/analyze_documents.py --cltr-mng-no {id} --pdf a.pdf b.pdf --dump-text
 ```
+스크립트가 텍스트·표 추출, 감정평가액/기준시점/면적/공시지가/보증금/채권최고액/용도지역/건폐율·용적률 후보 추출,
+리스크 키워드 플래그(부정 문맥 "없음" 구분), 스캔본 판정, `manual_review_needed` 목록까지 만든다.
+LLM 은 그 JSON 을 읽고 **비어 있는 해석 필드**(`rights_analysis.assumed_amount`, `eviction_risk`, `condition.repair_estimate`,
+`unpaid_management_fee`)를 원문 문맥(`*_candidates[].context`)을 근거로 채운다. 숫자 후보를 고를 때는 문맥을 인용한다.
+스캔본(`documents[].scanned=true`)이면 `pip install pytesseract pillow` 후 OCR 을 시도하거나 수동 확인으로 표기.
 
-## 분석 절차
+환경: `pdfplumber` (requirements.txt). PyMuPDF 는 선택.
+
+## 분석 절차 (스크립트가 수행 — 참고용 명세)
 
 ### Step 1: PDF 파일 위치 확인
 PDF 파일 경로: `_workspace/docs/{cltrMngNo}/`

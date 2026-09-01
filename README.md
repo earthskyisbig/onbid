@@ -10,7 +10,7 @@
 ```bash
 cp .env.example .env            # ONBID_API_KEY, MOLIT_API_KEY 입력 (공공데이터포털)
 python3 -m pip install -r requirements.txt   # Homebrew Python 은 --user 또는 venv
-python3 -m pytest                # 45개 테스트, 네트워크 불필요
+python3 -m pytest                # 71개 테스트, 네트워크 불필요
 ```
 
 ## 파이프라인
@@ -18,7 +18,7 @@ python3 -m pytest                # 45개 테스트, 네트워크 불필요
 ```
 Phase 1   scripts/search_properties.py      → _workspace/01_search_results.json
 Phase 1.5 scripts/verify_results.py phase1  → verification_report_phase1.json   (회차·가격·용도)
-Phase 2   document-analysis / location-analysis (+ fetch_market_data.py, fetch_naver_listings.py)
+Phase 2   scripts/analyze_documents.py + location-analysis (fetch_market_data.py --kind …, fetch_naver_listings.py)
 Phase 3   scripts/roi_calculator.py scenarios → 03_bid_strategy_{id}.json      (보수/기준/공격 + 판정)
 Phase 3.5 scripts/verify_results.py phase3  → verification_report_phase3.json   (원본 대조 + ROI 재계산)
 Phase 4   report-generation                 → final_report_{날짜}.md
@@ -32,8 +32,9 @@ Phase 4   report-generation                 → final_report_{날짜}.md
 |---------|------|------|
 | `search_properties.py` | 물건 검색 (필터 또는 `--ids`) | `python3 scripts/search_properties.py --region "경기도 수원시" --type 아파트 --min-fails 2` |
 | `verify_results.py` | 검색결과/전략 검증 (종료코드 1 = FAIL) | `python3 scripts/verify_results.py phase1` |
-| `roi_calculator.py` | 경매 ROI / 갭투자 ROE / 3시나리오 | `python3 scripts/roi_calculator.py scenarios --appraisal 2.5e8 --min-bid 2e8 --fair-value 2.55e8 --acq-tax-rate 0.011` |
-| `fetch_market_data.py` | 국토부 아파트 실거래가 | `python3 scripts/fetch_market_data.py --keyword 은마 --lawd-cd "서울 강남구" --area 76.79` |
+| `roi_calculator.py` | 경매 ROI / 갭투자 ROE / 3시나리오 / 취득세율 | `python3 scripts/roi_calculator.py scenarios --appraisal 2.5e8 --min-bid 2e8 --fair-value 2.55e8 --kind house --area-sqm 59` |
+| `fetch_market_data.py` | 국토부 실거래가 (`--kind apt\|offi\|rh\|sh\|land\|shop`) | `python3 scripts/fetch_market_data.py --kind rh --keyword 호안빌 --lawd-cd "서울 은평구" --area 39.94` |
+| `analyze_documents.py` | 감정평가서·재산명세서 PDF 분석 골격 | `python3 scripts/analyze_documents.py --cltr-mng-no 2026-16156-004` |
 | `fetch_naver_listings.py` | 네이버 부동산 호가 | `python3 scripts/fetch_naver_listings.py --keyword 일신 --lawd-cd 41650 --area 49.92` |
 | `fetch_ranking_stats.py` | 조회수/관심/저감률 순위, 입찰결과, 용도별 통계 | `python3 scripts/fetch_ranking_stats.py discount-rank --cltr-div 부동산` |
 | `common.py` | 경로·키·API 호출·응답 파싱 공통 | (라이브러리) |
@@ -44,6 +45,7 @@ Phase 4   report-generation                 → final_report_{날짜}.md
 
 - **회차 선택**: 온비드 압류재산은 미래 회차를 미리 예약해 둔다. 현재 회차 = 종료되지 않은 회차 중 입찰시작일이 가장 이른 회차. `pbctNsq` 최댓값을 쓰면 존재하지 않는 미래 최저가로 계산하게 된다 (2026-07-26 사고).
 - **감정가 대비 비율**: API 필드가 null 로 오는 경우가 많아 `lowstBidPrc / apslEvlAmt` 로 직접 계산한다 (2026-09-02 수정).
+- **유찰횟수**: 공고목록의 반복 횟수는 예약 회차 수다. 유찰 필터는 물건별 `usbdNft` 로만 건다 (2026-09-02 실측 후 수정).
 - 실제 입찰은 onbid.co.kr 에서 직접. API 는 조회 전용.
 - 중간 산출물 `_workspace/` 는 git 추적 제외.
 

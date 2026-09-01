@@ -22,7 +22,11 @@
     --status      입찰상태 (진행중/예정/모두, 기본: 모두)
     --ids         물건관리번호 목록 (공백 구분, 목록API 없이 직접 조회)
     --rows        상세조회 numOfRows (기본: 100 — 회차가 잘리지 않도록 충분히 크게)
-    --max-pbanc   모드B에서 처리할 최대 공고 수 (기본: 100)
+    --max-pbanc   모드B에서 처리할 최대 공고 수 (기본: 100, 전체는 약 360건 ≈ 6분)
+
+유찰횟수 필터 (2026-09-02 수정):
+    공고목록의 pbancMngNo 반복 횟수는 "예약된 회차 수"이지 유찰 횟수가 아니다.
+    --min-fails 는 단계2(getPbancCltrInf2)의 물건별 usbdNft 와 단계3 상세값으로만 적용한다.
 
 회차 선택 원칙 (2026-07-26 버그 이후 고정):
     동일 cltrMngNo 의 여러 예약 회차 중 "입찰종료일시가 아직 지나지 않은 회차 가운데
@@ -127,13 +131,39 @@ def group_rounds(items: list[dict], key_field: str = 'cltrMngNo') -> dict[str, l
 
 
 # ─────────────────────────── API 단계 ───────────────────────────
-def call_list_api(min_fails=None, key=None):
+def summarize_pbanc_list(all_items: list[dict]) -> list[dict]:
+    """
+    공고목록 원본(같은 pbancMngNo 가 회차마다 반복됨)을 고유 공고 목록으로 압축한다.
+    최신 공고일(pbancYmd) 순. 각 항목에 list_count(목록 반복 횟수)와 pbctNsq_max 를 남긴다.
+
+    ※ 반복 횟수는 유찰 횟수가 **아니다** (2026-09-02 실측: 359개 공고 중 253개가 10회 반복 —
+      미리 예약된 회차 수. 2회만 등장한 공고의 물건이 실제 유찰 4~6회인 사례 다수).
+      유찰 필터는 단계2의 usbdNft(물건별 실제값)로만 적용한다.
+    """
+    groups: dict[str, list[dict]] = {}
+    for it in all_items:
+        no = it.get('pbancMngNo')
+        if no:
+            groups.setdefault(no, []).append(it)
+    out = []
+    for no, rows in groups.items():
+        out.append({
+            'pbancMngNo': no,
+            'list_count': len(rows),
+            'pbctNsq_max': max((to_int(r.get('pbctNsq')) for r in rows), default=0),
+            'pbancYmd': max((str(r.get('pbancYmd') or '') for r in rows), default=''),
+            'pbancKindNm': rows[-1].get('pbancKindNm', ''),
+            'onbidPbancNm': rows[-1].get('onbidPbancNm', ''),
+        })
+    out.sort(key=lambda e: e['pbancYmd'], reverse=True)
+    return out
+
+
+def call_list_api(key=None):
     """
     OnbidPbancListSrvc2/getPbancList2 공고목록 API 호출 (차세대).
-    prptDivCd=0007(압류재산)으로 전체 수집 후 고유 pbancMngNo를 반환.
-
-    반복 패턴: 같은 pbancMngNo가 N회 나타나면 유찰 N-1회로 추정.
-    min_fails가 지정되면 반복 횟수 >= min_fails+1인 pbancMngNo만 반환.
+    prptDivCd=0007(압류재산) 전체(약 3,000행/30페이지)를 수집해 고유 pbancMngNo 목록을 반환한다.
+    유찰 횟수 필터는 여기서 하지 않는다 — summarize_pbanc_list 주석 참조.
     """
     all_items = []
     page = 1
@@ -150,19 +180,7 @@ def call_list_api(min_fails=None, key=None):
             break
         page += 1
         time.sleep(0.15)
-
-    counter = Counter(i.get('pbancMngNo') for i in all_items if i.get('pbancMngNo'))
-    threshold = (min_fails + 1) if (min_fails is not None and min_fails > 0) else 1
-    seen = set()
-    pbanc_nos = []
-    for item in reversed(all_items):  # 최신 공고가 마지막 → 역순
-        no = item.get('pbancMngNo')
-        if not no or no in seen:
-            continue
-        if counter[no] >= threshold:
-            seen.add(no)
-            pbanc_nos.append({'pbancMngNo': no, 'usbdNft_est': counter[no] - 1})
-    return pbanc_nos, None
+    return summarize_pbanc_list(all_items), None
 
 
 def _prefilter_pass(item: dict, pf: dict) -> bool:
@@ -486,15 +504,15 @@ def main(argv=None):
         raw_detail, errors = call_detail_api(args.ids, rows=args.rows, key=key)
     else:
         print("[모드 B] 차세대 API 3단계 조회 (압류재산 전체 수집)")
-        print("  ※ 유찰횟수는 공고 반복 횟수로 추정, 나머지 필터는 상세 조회 후 클라이언트 적용\n")
+        print("  ※ 유찰횟수·지역·용도·가격은 단계2에서 물건별 실제값(usbdNft 등)으로 사전필터\n")
         print("  [단계1] 공고목록 전체 수집 중...")
-        pbanc_entries, err = call_list_api(min_fails=args.min_fails, key=key)
+        pbanc_entries, err = call_list_api(key=key)
         if err:
             print(f"\n[!] 공고목록 조회 실패: {err}")
             print("  대안: --ids 옵션으로 물건관리번호를 직접 입력")
             print("  예시: python3 scripts/search_properties.py --ids 2026-0200-106923 ...")
             sys.exit(1)
-        print(f"  → 유효 공고 {len(pbanc_entries)}건 (유찰 {args.min_fails or 0}회+ 필터 적용)")
+        print(f"  → 고유 공고 {len(pbanc_entries)}건 (최신 공고일 순)")
         if len(pbanc_entries) > args.max_pbanc:
             pbanc_entries = pbanc_entries[:args.max_pbanc]
             print(f"  → max_pbanc={args.max_pbanc} 적용 → {len(pbanc_entries)}건")

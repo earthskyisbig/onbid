@@ -73,6 +73,69 @@ DISCLAIMER = {
 }
 
 
+# ─────────────────────────── 취득세율 (지방세법 §11·§13의2, 2026-09 기준) ───────────────────────────
+PROPERTY_KINDS = ('house', 'officetel', 'commercial', 'land', 'building', 'farmland')
+
+
+def acquisition_tax_rate(kind: str = 'house', price: float | None = None, area_sqm: float | None = None,
+                         house_count: int = 1, adjusted_area: bool = False) -> dict:
+    """
+    취득세 + 지방교육세 + 농어촌특별세 합산 세율(소수)을 돌려준다. 경매·공매 낙찰은 유상취득으로 본다.
+    kind: house(주택) / officetel(오피스텔·업무용) / commercial(상가) / land(토지) / building(비주택 건물) / farmland(농지)
+    house_count: 취득 후 보유 주택 수 (이번 물건 포함). adjusted_area: 조정대상지역 여부.
+    반환: {'rate', 'components': {acquisition, education, special}, 'basis', 'notes': [...]}
+    ※ 감면(생애최초·신축 등)·일시적 2주택 예외는 반영하지 않는다 — notes 로 안내.
+    """
+    notes = []
+    if kind == 'house':
+        if price is None or price <= 0:
+            raise ROIInputError("주택 취득세율 계산에는 취득가액(price)이 필요합니다")
+        large = bool(area_sqm and area_sqm > 85)
+        heavy12 = (adjusted_area and house_count >= 3) or (not adjusted_area and house_count >= 4)
+        heavy8 = (adjusted_area and house_count == 2) or (not adjusted_area and house_count == 3)
+        if heavy12:
+            acq, edu, spc = 0.12, 0.004, (0.01 if large else 0.0)
+            basis = f"{'조정지역 3주택↑' if adjusted_area else '비조정 4주택↑'} 중과 12%"
+            notes.append("다주택 중과세율 적용 — 일시적 2주택·상속·감면 예외는 미반영. 세무사 확인 필수")
+        elif heavy8:
+            acq, edu, spc = 0.08, 0.004, (0.006 if large else 0.0)
+            basis = f"{'조정지역 2주택' if adjusted_area else '비조정 3주택'} 중과 8%"
+            notes.append("다주택 중과세율 적용 — 일시적 2주택(종전주택 3년 내 처분) 해당 시 일반세율. 세무사 확인 필수")
+        else:
+            if price <= 600_000_000:
+                acq = 0.01
+                basis = "주택 6억 이하 1%"
+            elif price <= 900_000_000:
+                acq = round((price * 2 / 300_000_000 - 3) / 100, 4)   # (가액×2/3억 − 3)%, 소수 둘째자리 반올림
+                basis = f"주택 6~9억 누진 {acq*100:.2f}%"
+            else:
+                acq = 0.03
+                basis = "주택 9억 초과 3%"
+            edu = round(acq / 10, 5)
+            spc = 0.002 if large else 0.0
+            if house_count == 2 and not adjusted_area:
+                notes.append("비조정지역 2주택은 일반세율 (조정지역이면 8% 중과)")
+        if large:
+            notes.append("전용 85㎡ 초과 — 농어촌특별세 가산")
+        else:
+            notes.append("전용 85㎡ 이하 — 농어촌특별세 비과세")
+    elif kind in ('officetel', 'commercial', 'land', 'building'):
+        acq, edu, spc = 0.04, 0.004, 0.002
+        basis = "비주택 부동산 일반 4% (+교육세 0.4% +농특세 0.2%)"
+        if kind == 'officetel':
+            notes.append("오피스텔은 취득 시 비주택 4.6%. 주거용 사용 중이면 보유 주택 수에는 산입될 수 있음")
+    elif kind == 'farmland':
+        acq, edu, spc = 0.03, 0.002, 0.002
+        basis = "농지 3% (+교육세 0.2% +농특세 0.2%)"
+        notes.append("2년 이상 자경 농민이 취득하면 1.5% 감면세율 — 요건 확인 필요")
+    else:
+        raise ROIInputError(f"kind 는 {PROPERTY_KINDS} 중 하나여야 합니다: {kind!r}")
+    rate = round(acq + edu + spc, 5)
+    return {'rate': rate, 'components': {'acquisition': acq, 'education': edu, 'special': spc},
+            'basis': basis + f" → 합계 {rate*100:.2f}%", 'kind': kind, 'price': price, 'area_sqm': area_sqm,
+            'house_count': house_count, 'adjusted_area': adjusted_area, 'notes': notes}
+
+
 class ROIInputError(ValueError):
     """입력 검증 실패 (계산 중단)."""
 
@@ -124,7 +187,16 @@ def calc_auction(inputs: dict) -> dict:
     if sale is None or sale < 0:
         raise ROIInputError(f"expectedSalePrice 는 0 이상이어야 합니다 (입력: {sale})")
 
-    acq_rate = _num(inputs, 'acquisitionTaxRate', DEFAULT_ACQUISITION_TAX_RATE)
+    tax_basis = None
+    acq_rate = _num(inputs, 'acquisitionTaxRate')
+    if acq_rate is None and inputs.get('propertyKind'):
+        tax_basis = acquisition_tax_rate(inputs['propertyKind'], price=bid,
+                                         area_sqm=_num(inputs, 'areaSqm'),
+                                         house_count=int(inputs.get('houseCount') or 1),
+                                         adjusted_area=bool(inputs.get('adjustedArea')))
+        acq_rate = tax_basis['rate']
+    elif acq_rate is None:
+        acq_rate = DEFAULT_ACQUISITION_TAX_RATE
     legal = _num(inputs, 'legalFee', 0) or 0
     regist = _num(inputs, 'registrationFee', 0) or 0
     evict = _num(inputs, 'evictionCost', 0) or 0
@@ -196,6 +268,8 @@ def calc_auction(inputs: dict) -> dict:
         'inputs': {
             'appraisalValue': appraisal, 'bidPrice': bid, 'expectedSalePrice': sale,
             'holdingPeriodMonths': months, 'acquisitionTaxRate': acq_rate,
+            'propertyKind': inputs.get('propertyKind'), 'areaSqm': _num(inputs, 'areaSqm'),
+            'houseCount': inputs.get('houseCount'), 'adjustedArea': inputs.get('adjustedArea'),
             'legalFee': legal, 'registrationFee': regist, 'evictionCost': evict,
             'repairCost': repair, 'interiorCost': interior,
             'assumedRightsAmount': assumed, 'unpaidManagementFee': unpaid,
@@ -203,6 +277,7 @@ def calc_auction(inputs: dict) -> dict:
             'earlyRepaymentFeeRate': early_rate, 'transferTax': transfer_tax, 'businessTax': business_tax,
         },
         'bidToAppraisalRatio': round(ratio, 2),
+        'acquisitionTaxBasis': tax_basis,
         'costs': {
             'acquisitionTax': round(acq_tax), 'legalFee': round(legal), 'registrationFee': round(regist),
             'evictionCost': round(evict), 'repairCost': round(repair), 'interiorCost': round(interior),
@@ -440,7 +515,7 @@ def render_auction(r: dict) -> str:
         f"- 보유기간: {i['holdingPeriodMonths']:.0f}개월", "",
         "### 비용 상세",
         "| 항목 | 금액 |", "|------|------|",
-        f"| 취득세 ({i['acquisitionTaxRate']*100:.2f}%) | {_man(c['acquisitionTax'])} |",
+        f"| 취득세 ({i['acquisitionTaxRate']*100:.2f}%{' · ' + r['acquisitionTaxBasis']['basis'] if r.get('acquisitionTaxBasis') else ''}) | {_man(c['acquisitionTax'])} |",
         f"| 법무비용 | {_man(c['legalFee'])} |",
         f"| 등록세/등기비용 | {_man(c['registrationFee'])} |",
         f"| 명도비용 | {_man(c['evictionCost'])} |",
@@ -530,7 +605,11 @@ def render_scenarios(r: dict) -> str:
 # ─────────────────────────── CLI ───────────────────────────
 def _add_common_cost_args(p: argparse.ArgumentParser):
     p.add_argument('--owner', choices=['individual', 'business'], default=None, help='투자 주체 (기본 individual)')
-    p.add_argument('--acq-tax-rate', type=float, default=None, help='취득세율 소수 (기본 0.046)')
+    p.add_argument('--acq-tax-rate', type=float, default=None, help='취득세율 소수 (기본 0.046). --kind 를 주면 자동 산정')
+    p.add_argument('--kind', choices=PROPERTY_KINDS, default=None, help='물건 종류 → 취득세율 자동 산정 (house 는 입찰가·면적·주택수 반영)')
+    p.add_argument('--area-sqm', type=float, default=None, help='전용면적 ㎡ (house 농특세 판정)')
+    p.add_argument('--house-count', type=int, default=None, help='취득 후 보유 주택 수 (기본 1)')
+    p.add_argument('--adjusted', action='store_true', default=None, help='조정대상지역')
     p.add_argument('--legal-fee', type=float, default=None)
     p.add_argument('--registration-fee', type=float, default=None)
     p.add_argument('--eviction-cost', type=float, default=None)
@@ -553,6 +632,7 @@ _COMMON_MAP = {
     'unpaid_mgmt_fee': 'unpaidManagementFee', 'commission_rate': 'agentCommissionRate',
     'loan': 'loanAmount', 'loan_rate': 'loanAnnualRate', 'early_fee_rate': 'earlyRepaymentFeeRate',
     'transfer_tax': 'transferTax', 'business_tax': 'businessTax',
+    'kind': 'propertyKind', 'area_sqm': 'areaSqm', 'house_count': 'houseCount', 'adjusted': 'adjustedArea',
 }
 
 
@@ -618,9 +698,21 @@ def main(argv=None):
     ps.add_argument('--sale-basis', default='', help='적정가치 산출 근거 메모')
     _add_common_cost_args(ps)
 
+    pt = sub.add_parser('tax', parents=[shared], help='취득세율만 조회')
+    pt.add_argument('--kind', choices=PROPERTY_KINDS, required=True)
+    pt.add_argument('--price', type=float, help='취득가액 (house 필수)')
+    pt.add_argument('--area-sqm', type=float)
+    pt.add_argument('--house-count', type=int, default=1)
+    pt.add_argument('--adjusted', action='store_true')
+
     args = parser.parse_args(argv)
     try:
-        if args.command == 'auction':
+        if args.command == 'tax':
+            r = acquisition_tax_rate(args.kind, args.price, args.area_sqm, args.house_count, args.adjusted)
+            text = (f"취득세율 {r['rate']*100:.2f}% — {r['basis']}\n"
+                    + "\n".join(f"- {n}" for n in r['notes']))
+            _emit(r, text, args)
+        elif args.command == 'auction':
             inputs = _collect(args, {'appraisal': 'appraisalValue', 'bid': 'bidPrice',
                                      'sale': 'expectedSalePrice', 'months': 'holdingPeriodMonths'})
             r = calc_auction(inputs)

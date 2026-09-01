@@ -24,15 +24,13 @@ description: 공매 물건 주소의 입지를 분석하고 개발호재를 조�
 결과 파일: `_workspace/market_{cltrMngNo}.json`  
 → `summary.trade_avg`, `summary.jeonse_avg`, `summary.vs_apsl_pct` 값을 본 파일의 `market_data` 필드에 포함시킨다.
 
-토지·상업·기타 물건이면 아래 토지 실거래가 API 직접 호출:
-```python
-# 토지 실거래가 조회 (아파트 아닌 경우에만)
-url = "https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade"
-params = {'serviceKey': unquote(os.getenv('MOLIT_API_KEY')), 'LAWD_CD': lawd_cd,
-          'DEAL_YMD': deal_ymd, 'numOfRows': 100, 'pageNo': 1}
+토지·상업·연립·단독 물건도 같은 스크립트를 `--kind` 만 바꿔 호출한다 (인라인 API 코드 금지):
+```bash
+python3 scripts/fetch_market_data.py --kind land --keyword {읍면동} --lawd-cd {5자리} --area {면적} --area-tol 400 --apsl {감정가} --low-bid {최저가} --cltr-mng-no {id}
+python3 scripts/fetch_market_data.py --kind shop --keyword {읍면동 또는 건물용도} --lawd-cd {5자리} --area {건물면적} --area-tol 30 ...
+python3 scripts/fetch_market_data.py --kind rh   --keyword {건물명} --lawd-cd {5자리} --area {전용} ...
 ```
-
-최근 12개월치 조회 (월별 루프), 평당가 평균 계산
+`summary.price_per_sqm_median` 과 `implied_value_at_target_area` 를 `market_data` 에 포함시킨다.
 
 ### Step 2.5: 네이버 호가 조회 → **naver-land-data 스킬 사용**
 

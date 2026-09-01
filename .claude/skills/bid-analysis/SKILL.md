@@ -40,11 +40,10 @@ def load_analysis_data(cltr_mng_no, workspace='_workspace'):
 | `--loan`, `--loan-rate` | 사용자 입력 (기본 0) | |
 | `--owner` | 사용자 입력 (기본 individual) | |
 
-취득세율:
-- 주택 1채·6억 이하 → `0.011` (전용 85㎡ 초과면 `0.013`)
-- 주택 1채·6~9억 → `0.022` 내외 (구간별 누진), 9억 초과 → `0.033`
-- 비주택(토지·상가·오피스텔 업무용) → `0.046`
-- 다주택·조정지역은 8.8%~13.4% — 사용자 보유주택 수 확인 후 결정
+취득세율: `--acq-tax-rate` 대신 **`--kind {house|officetel|commercial|land|building|farmland} --area-sqm {전용} --house-count {취득 후 주택 수} [--adjusted]`** 를 주면
+스크립트가 시나리오별 입찰가에 맞춰 자동 산정한다 (6억 이하 1% / 6~9억 누진 / 9억 초과 3% / 중과 8·12% / 비주택 4.6% / 농지 3.4%, 지방교육세·농특세 포함).
+확인용: `python3 scripts/roi_calculator.py tax --kind house --price {입찰가} --area-sqm {면적} --house-count {n}`.
+온비드 용도 → kind: 아파트·다세대·연립·단독→house, 오피스텔→officetel, 상가·근생→commercial, 대지·임야→land, 전·답·과수원→farmland.
 
 ---
 
@@ -70,9 +69,10 @@ python3 scripts/roi_calculator.py scenarios \
     --cltr-mng-no 2026-16156-004 \
     --appraisal 250000000 --min-bid 200000000 --fair-value 255000000 \
     --sale-basis "최근 12개월 ㎡당 중앙값 기준 2.55억(보수 채택), 038회차 최저가 진입" \
-    --acq-tax-rate 0.011 --legal-fee 300000 --registration-fee 500000 \
+    --kind officetel --legal-fee 300000 --registration-fee 500000 \
     --eviction-cost 2000000 --repair-cost 3000000 --assumed-rights 0 \
     --output _workspace/03_bid_strategy_2026-16156-004.json
+# 주택이면: --kind house --area-sqm 59.3 --house-count 1  (조정지역이면 --adjusted)
 ```
 
 파라미터가 많으면 JSON 으로: `--json-in params.json` (키는 camelCase: `acquisitionTaxRate`, `evictionCost`, …). CLI 인자가 JSON 값을 덮어쓴다.

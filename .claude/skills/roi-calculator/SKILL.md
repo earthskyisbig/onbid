@@ -9,7 +9,10 @@
 python3 scripts/roi_calculator.py auction   --appraisal 425000000 --bid 382500000 --sale 409000000 --months 6 [--acq-tax-rate 0.011 --assumed-rights 0 --loan 0 ...]
 python3 scripts/roi_calculator.py gap       --purchase 409000000 --jeonse 318000000 --sale 430000000 --months 24
 python3 scripts/roi_calculator.py scenarios --appraisal ... --min-bid ... --fair-value ... [비용 옵션] --output _workspace/03_bid_strategy_{id}.json
+python3 scripts/roi_calculator.py tax --kind house --price 750000000 --area-sqm 84 [--house-count 2 --adjusted]   # 취득세율만
 # 공통: --json-in params.json (camelCase 키), --format md|json, --output 경로
+# 취득세율: --acq-tax-rate 를 직접 주거나, --kind house|officetel|commercial|land|building|farmland (+ --area-sqm --house-count --adjusted) 로 자동 산정.
+#   house 는 시나리오별 입찰가에 맞춰 6억/9억 구간·누진세율을 각각 적용하고 acquisitionTaxBasis 에 근거를 남긴다. 감면·일시적 2주택은 미반영(경고).
 ```
 
 아래 STEP 1~5 는 스크립트가 그대로 구현한 명세다 (`tests/test_roi_calculator.py` 가 references 의 예시값으로 검증).

@@ -88,9 +88,11 @@ Agent(
   document-analysis 스킬을 사용하여 다음 물건의 첨부서류를 분석하라:
   cltrMngNo: {cltrMngNo}
   PDF 경로: _workspace/docs/{cltrMngNo}/
-  
-  결과를 _workspace/02_doc_analysis_{cltrMngNo}.json에 저장하라.
-  PDF가 없으면 온비드 URL 안내 후 API 데이터만으로 가능한 분석 수행.
+
+  먼저 `python3 scripts/analyze_documents.py --cltr-mng-no {cltrMngNo}` 로 골격 JSON 을 만들고,
+  비어 있는 해석 필드(rights_analysis, eviction_risk, condition, unpaid_management_fee)만
+  원문 문맥을 근거로 채워 _workspace/02_doc_analysis_{cltrMngNo}.json 에 저장하라.
+  PDF가 없으면 온비드 URL 안내 후 API 데이터만으로 가능한 분석 수행 (manual_review_needed 에 명시).
   """
 )
 
@@ -103,8 +105,11 @@ Agent(
   prompt: """
   location-analysis 스킬을 사용하여 다음 물건의 입지를 분석하라:
   주소: {cltrAdr}
-  물건유형: {prptDivNm}
+  물건유형: {prptDivNm} / 용도소분류: {cltrUsgSclsCtgrNm}
   cltrMngNo: {cltrMngNo}
+
+  시세는 `python3 scripts/fetch_market_data.py --kind {apt|offi|rh|sh|land|shop} ...` 로 조회하라
+  (용도소분류 → kind 매핑은 molit-market-data 스킬 참조).
   
   결과를 _workspace/02_location_analysis_{cltrMngNo}.json에 저장하라.
   """
@@ -225,9 +230,10 @@ _workspace/final_report_{날짜}_summary.md
 |---------|------|-------|
 | `scripts/search_properties.py` | Phase 1 검색 (모드A `--ids`, 모드B 필터) | `tests/test_search_properties.py` |
 | `scripts/verify_results.py phase1\|phase3` | Phase 1.5 / 3.5 검증 | `tests/test_verify_results.py` |
-| `scripts/fetch_market_data.py` | 국토부 실거래가 | `tests/test_market_and_naver.py` |
+| `scripts/fetch_market_data.py --kind …` | 국토부 실거래가 (아파트·오피스텔·연립다세대·단독·토지·상업용) | `tests/test_market_and_naver.py`, `tests/test_followups.py` |
+| `scripts/analyze_documents.py` | Phase 2 PDF 서류 분석 골격 | `tests/test_followups.py` |
 | `scripts/fetch_naver_listings.py` | 네이버 호가 | 〃 |
-| `scripts/roi_calculator.py` | Phase 3 ROI (auction/gap/scenarios) | `tests/test_roi_calculator.py` |
+| `scripts/roi_calculator.py` | Phase 3 ROI (auction/gap/scenarios/tax — 취득세율 자동) | `tests/test_roi_calculator.py`, `tests/test_followups.py` |
 | `scripts/fetch_ranking_stats.py` | 순위·통계·입찰결과 API | — |
 | `scripts/common.py` | 경로·키·API 호출 공통 | 〃 |
 

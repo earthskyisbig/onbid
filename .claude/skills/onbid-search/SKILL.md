@@ -9,7 +9,7 @@ description: 온비드(OnBid) 공공데이터 Open API를 호출하여 공매 �
 
 | 단계 | 엔드포인트 | 용도 |
 |------|-----------|------|
-| 목록 | `OnbidPbancListSrvc2/getPbancList2` | 압류재산(prptDivCd=0007) 공고 전체 수집. 같은 pbancMngNo 반복 횟수 = 유찰 추정 |
+| 목록 | `OnbidPbancListSrvc2/getPbancList2` | 압류재산(prptDivCd=0007) 공고 전체 수집(약 3,000행 → 고유 공고 약 360건). **반복 횟수는 예약 회차 수이지 유찰이 아니다** |
 | 공고→물건 | `OnbidPbancCltrDtlSrvc2/getPbancCltrInf2` | pbancMngNo → cltrMngNo 목록 (지역·용도·가격 사전필터) |
 | 상세 | `OnbidRlstDtlSrvc2/getRlstDtlInf2` | cltrMngNo 로 상세. **한 물건의 모든 예약 회차가 items 로 옴** |
 
@@ -69,6 +69,8 @@ item = normalize_item(current, rounds=rounds)      # 통일 스키마 (아래 �
 | `--output` | 저장 경로 | 기본 `_workspace/01_search_results.json` |
 
 `--type ""`(빈 문자열)은 필터 없음으로 처리한다 (66ab3f7 회귀 방지 테스트 있음).
+
+**유찰횟수는 단계2의 물건별 `usbdNft` 로만 거른다.** 2026-09-02 실측: 공고목록에서 2회만 등장한 공고의 물건이 실제 유찰 4~6회, 10회 반복 공고 253건은 예약 회차. 이전 코드는 반복 횟수로 1단계에서 걸러 실제 유찰 물건을 놓쳤다.
 
 ---
 
