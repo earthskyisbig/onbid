@@ -1,0 +1,426 @@
+<title>온비드 공매 대시보드</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --surface-2:#E9EDF1; --line:#D5DBE2; --line-strong:#B9C2CC;
+  --ink:#141C24; --ink-2:#4A5866; --ink-3:#7A8794;
+  --accent:#1C4F8A; --accent-ink:#FFFFFF; --accent-soft:#DCE7F5; --accent-line:#8FB0D8;
+  --good:#1F7A48; --good-soft:#DDF1E4; --warn:#A16A0E; --warn-soft:#F8ECD2; --crit:#B3261E; --crit-soft:#F9DEDC;
+  --chart-bar:#3B74B4; --chart-bar-current:#1C4F8A; --chart-bar-ended:#C3CCD6; --chart-grid:#E3E8ED;
+  --shadow:0 1px 2px rgba(20,28,36,.06),0 8px 24px -12px rgba(20,28,36,.18);
+  --serif:"Nanum Myeongjo",Batang,"Apple Myungjo",serif;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1519; --surface:#171F26; --surface-2:#1F2931; --line:#2B3741; --line-strong:#3D4B57;
+    --ink:#E6ECF1; --ink-2:#A9B5C0; --ink-3:#7D8A96;
+    --accent:#7FB0E6; --accent-ink:#0F1519; --accent-soft:#1D3350; --accent-line:#3F6A9C;
+    --good:#6FCB93; --good-soft:#163524; --warn:#E3B45B; --warn-soft:#3A2C0F; --crit:#F08A83; --crit-soft:#46201D;
+    --chart-bar:#5E92CC; --chart-bar-current:#9CC3F0; --chart-bar-ended:#3A4652; --chart-grid:#26313A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1519; --surface:#171F26; --surface-2:#1F2931; --line:#2B3741; --line-strong:#3D4B57;
+  --ink:#E6ECF1; --ink-2:#A9B5C0; --ink-3:#7D8A96;
+  --accent:#7FB0E6; --accent-ink:#0F1519; --accent-soft:#1D3350; --accent-line:#3F6A9C;
+  --good:#6FCB93; --good-soft:#163524; --warn:#E3B45B; --warn-soft:#3A2C0F; --crit:#F08A83; --crit-soft:#46201D;
+  --chart-bar:#5E92CC; --chart-bar-current:#9CC3F0; --chart-bar-ended:#3A4652; --chart-grid:#26313A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tnum{font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.wrap{max-width:1280px;margin:0 auto;padding:20px clamp(12px,3vw,32px) 64px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-bottom:16px;border-bottom:1px solid var(--line-strong)}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+h1{font-family:var(--serif);font-weight:800;font-size:clamp(22px,3vw,30px);letter-spacing:-.01em;line-height:1.2;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;color:var(--ink-2);font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;color:var(--ink-2);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+.chip.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0 22px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-height:78px}
+.tile .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.04em}
+.tile .v{font-family:var(--mono);font-size:24px;font-weight:500;line-height:1.1;color:var(--ink)}
+.tile .s{font-size:12px;color:var(--ink-2)}
+.tile.good .v{color:var(--good)} .tile.warn .v{color:var(--warn)} .tile.crit .v{color:var(--crit)}
+
+.main{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.panel-h h2{font-family:var(--serif);font-size:16px;font-weight:700}
+.panel-h .sub{font-size:12px;color:var(--ink-3)}
+
+.list{list-style:none;margin:0;padding:6px}
+.list li{margin:0}
+.item{width:100%;text-align:left;display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 10px;border-radius:6px;border:1px solid transparent}
+.item:hover{background:var(--surface-2)}
+.item[aria-current="true"]{background:var(--accent-soft);border-color:var(--accent-line)}
+.item .nm{font-weight:600;font-size:13.5px;line-height:1.35;grid-column:1/-1;overflow-wrap:anywhere}
+.item .ad{font-size:12px;color:var(--ink-2);grid-column:1/-1;overflow-wrap:anywhere}
+.item .row{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:12px;color:var(--ink-2);margin-top:3px}
+.item .row .num{color:var(--ink)}
+.disc{font-family:var(--mono);font-weight:500}
+.disc.hi{color:var(--good)}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:1px 7px;border-radius:4px;letter-spacing:.02em;white-space:nowrap}
+.badge.pass{background:var(--good-soft);color:var(--good)} .badge.warn{background:var(--warn-soft);color:var(--warn)} .badge.fail{background:var(--crit-soft);color:var(--crit)}
+.badge.none{background:var(--surface-2);color:var(--ink-3)} .badge.acc{background:var(--accent-soft);color:var(--ink)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+
+.detail{min-height:420px}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{padding:8px 12px;border-radius:6px 6px 0 0;font-size:13px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.tabpane{padding:14px 16px 18px}
+.dtitle{font-family:var(--serif);font-size:18px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
+.dsub{color:var(--ink-2);font-size:12.5px;margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px 18px;margin:14px 0}
+.kv div{display:flex;flex-direction:column;gap:1px;border-top:1px solid var(--line);padding-top:6px}
+.kv dt{font-size:11.5px;color:var(--ink-3);letter-spacing:.03em}
+.kv dd{margin:0;font-size:14px;color:var(--ink)}
+.kv dd.num{font-size:15px}
+h3.sec{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:18px 0 8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:11.5px;color:var(--ink-3);font-weight:600;letter-spacing:.03em;white-space:nowrap}
+td.r,th.r{text-align:right}
+tr.cur td{background:var(--accent-soft)}
+tr.ended td{color:var(--ink-3)}
+.scroll{overflow-x:auto}
+.note{font-size:12.5px;color:var(--ink-2);padding:8px 10px;border-left:3px solid var(--line-strong);background:var(--surface-2);border-radius:0 4px 4px 0;margin:8px 0}
+.note.warn{border-left-color:var(--warn)} .note.crit{border-left-color:var(--crit)} .note.good{border-left-color:var(--good)}
+ul.flat{margin:6px 0;padding-left:18px} ul.flat li{margin:2px 0}
+.verdict{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:6px;font-weight:600;font-size:14px}
+.verdict.a{background:var(--good-soft);color:var(--good)} .verdict.p{background:var(--warn-soft);color:var(--warn)} .verdict.h{background:var(--surface-2);color:var(--ink-2)}
+.chart{margin:8px 0 4px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font-family:var(--mono);font-size:11px;fill:var(--ink-2)}
+.chart .grid{stroke:var(--chart-grid);stroke-width:1}
+.chart .bar{fill:var(--chart-bar)} .chart .bar.cur{fill:var(--chart-bar-current)} .chart .bar.ended{fill:var(--chart-bar-ended)}
+.chart .bar:hover{opacity:.85}
+.chart .lbl{fill:var(--ink)}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:4px;box-shadow:var(--shadow);z-index:9;display:none;font-family:var(--mono)}
+details.tree{margin:6px 0}
+details.tree summary{cursor:pointer;font-size:13px;color:var(--ink-2)}
+.tree-body{margin:6px 0 0 8px;padding-left:10px;border-left:1px solid var(--line)}
+.tree-kv{display:grid;grid-template-columns:minmax(120px,200px) 1fr;gap:2px 10px;font-size:12.5px;margin:2px 0}
+.tree-kv .k{color:var(--ink-3);font-family:var(--mono);font-size:11.5px;overflow-wrap:anywhere}
+.tree-kv .v{overflow-wrap:anywhere;white-space:pre-wrap}
+.report{margin-top:20px}
+.md{max-width:78ch;font-size:14px}
+.md h1,.md h2,.md h3{font-family:var(--serif);margin:22px 0 8px;line-height:1.3}
+.md h1{font-size:22px}.md h2{font-size:18px}.md h3{font-size:15px}
+.md p{margin:8px 0}.md blockquote{margin:10px 0;padding:6px 12px;border-left:3px solid var(--accent-line);background:var(--surface-2);border-radius:0 4px 4px 0}
+.md pre{background:var(--surface-2);padding:10px 12px;border-radius:4px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.45}
+.md code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);padding:0 4px;border-radius:3px}
+.md pre code{background:none;padding:0}
+.md table{margin:8px 0;font-size:12.5px}
+.md hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.empty{padding:40px 16px;text-align:center;color:var(--ink-3);font-size:13px}
+.files{font-size:12px;color:var(--ink-3);margin-top:22px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.files code{font-family:var(--mono)}
+@media (prefers-reduced-motion:no-preference){.item,.tab{transition:background .12s}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Onbid · 공매 투자 분석 하네스</div>
+      <h1 id="title">온비드 공매 대시보드</h1>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="요약"></section>
+
+  <section class="main">
+    <div class="panel">
+      <div class="panel-h"><h2>물건</h2><span class="sub" id="list-sub"></span></div>
+      <ul class="list" id="list"></ul>
+    </div>
+    <div class="panel detail" id="detail">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="tabpane" id="pane"></div>
+    </div>
+  </section>
+
+  <section class="panel report" id="report"></section>
+  <div class="files" id="files"></div>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script type="application/json" id="data">__DASHBOARD_DATA__</script>
+<script>
+(function(){
+'use strict';
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = (id)=>document.getElementById(id);
+const esc = (s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = (v)=>{ if(v==null||v==='') return null; const n=Number(String(v).replace(/,/g,'')); return isNaN(n)?null:n; };
+const won = (v)=>{ v=num(v); if(v==null) return '—'; const a=Math.abs(v); const sign=v<0?'−':''; if(a>=1e8) return sign+(a/1e8).toFixed(a>=1e9?1:2).replace(/\.?0+$/,'')+'억'; if(a>=1e4) return sign+Math.round(a/1e4).toLocaleString()+'만'; return sign+a.toLocaleString()+'원'; };
+const wonFull = (v)=>{ v=num(v); return v==null?'—':Math.round(v).toLocaleString()+'원'; };
+const pct = (v,d=1)=> v==null||isNaN(v)?'—':(Number(v).toFixed(d)+'%');
+const dt = (s)=>{ s=String(s||''); if(s.length<8) return s||'—'; const b=`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`; return s.length>=12?`${b} ${s.slice(8,10)}:${s.slice(10,12)}`:b; };
+const nowKey = (()=>{const d=new Date();const p=(n)=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}`;})();
+
+// ─── 데이터 정규화 (구·신 스키마 모두) ───
+const search = D.search || {properties:[]};
+const props = (search.properties||[]).map(p=>{
+  const low = num(p.lowstBidPrc ?? p.lowstBidPrcIndctCont), apsl = num(p.apslEvlAmt);
+  const ratio = (low&&apsl)? low/apsl*100 : num(p.apslRatio);
+  const end = String(p.cltrBidEndDt||''), bgn = String(p.cltrBidBgngDt||'');
+  let window = p.bid_window; if(!window){ window = !end? 'unknown' : end<nowKey ? 'ended' : (bgn>nowKey?'upcoming':'open'); }
+  let days = p.days_to_bid_end; if(days==null && end.length>=8){ const e=new Date(+end.slice(0,4),+end.slice(4,6)-1,+end.slice(6,8),+(end.slice(8,10)||0),+(end.slice(10,12)||0)); days=Math.floor((e-new Date())/864e5); }
+  return {...p, _low:low, _apsl:apsl, _ratio:ratio, _disc: ratio==null?null:100-ratio, _window:window, _days:days, _rounds:Array.isArray(p.rounds)?p.rounds:[]};
+});
+const byId = Object.fromEntries(props.map(p=>[p.cltrMngNo,p]));
+const v1 = D.verification?.phase1, v3 = D.verification?.phase3;
+const vmap = {};
+for(const r of (v1?.results||[])) vmap[r.cltrMngNo] = {phase1:r};
+for(const r of (v3?.results||[])) (vmap[r.cltrMngNo] ||= {}).phase3 = r;
+const verdictOf = (id)=>{ const v=vmap[id]; if(!v) return null; const s=[v.phase1?.verdict, v.phase3?.verdict].filter(Boolean); if(s.includes('FAIL')) return 'FAIL'; if(s.includes('WARN')) return 'WARN'; return s.length?'PASS':null; };
+const strat = D.strategies||{};
+const isNewStrat = (s)=> s && typeof s.generator==='string' && s.generator.includes('roi_calculator');
+const stratVerdict = (s)=> s?.recommendation?.verdict || s?.bid_decision || s?.recommendation?.decision || null;
+
+// ─── 헤더·요약 ───
+if(D.title) $('title').textContent = D.title;
+const f = search.filters||{};
+const chips = [];
+if(search.query_date) chips.push(`<span class="chip">조회 <b>${esc(search.query_date)}</b></span>`);
+for(const [k,label] of [['region','지역'],['type','용도'],['min_fails','유찰≥'],['max_fails','유찰≤'],['status','상태']]) if(f[k]!=null&&f[k]!==''&&f[k]!=='모두') chips.push(`<span class="chip">${label} <b>${esc(f[k])}</b></span>`);
+if(f.price_max) chips.push(`<span class="chip">최저가 ≤ <b>${won(f.price_max)}</b></span>`);
+if(f.price_min) chips.push(`<span class="chip">최저가 ≥ <b>${won(f.price_min)}</b></span>`);
+if(f.area_min||f.area_max) chips.push(`<span class="chip">면적 <b>${f.area_min||''}~${f.area_max||''}㎡</b></span>`);
+chips.push(`<span class="chip">대시보드 생성 <b>${esc(D.generated_at)}</b></span>`);
+$('meta').innerHTML = chips.join('');
+
+const soon = props.filter(p=>p._days!=null&&p._days>=0&&p._days<=7).length;
+const ended = props.filter(p=>p._window==='ended').length;
+const maxDisc = props.reduce((m,p)=>p._disc!=null&&p._disc>m?p._disc:m,0);
+const s1 = v1?.summary || (v1? {PASS:(v1.results||[]).filter(r=>r.verdict==='PASS').length, WARN:(v1.results||[]).filter(r=>r.verdict==='WARN').length, FAIL:(v1.results||[]).filter(r=>r.verdict==='FAIL').length} : null);
+const stratCount = Object.keys(strat).length;
+const tiles = [
+  {l:'검색 물건', v:props.length, s: search.total_fetched!=null? `조회 ${search.total_fetched}건 중 필터 통과` : ''},
+  {l:'Phase 1.5 검증', v: s1? `${s1.PASS}/${props.length}` : '—', s: s1? `WARN ${s1.WARN} · FAIL ${s1.FAIL}` : '검증 보고서 없음', cls: !s1?'':(s1.FAIL?'crit':(s1.WARN?'warn':'good'))},
+  {l:'입찰 전략 수립', v: stratCount, s: stratCount? Object.entries(strat).map(([id,s])=>stratVerdict(s)||'—').join(' · ') : '03_bid_strategy 없음'},
+  {l:'7일 내 마감', v: soon, s: ended? `종료 ${ended}건 포함` : '입찰 종료일 기준', cls: soon?'warn':''},
+  {l:'최대 할인율', v: props.length? pct(maxDisc,0):'—', s:'감정가 대비 현재 회차 최저가'},
+];
+$('tiles').innerHTML = tiles.map(t=>`<div class="tile ${t.cls||''}"><span class="l">${esc(t.l)}</span><span class="v">${esc(t.v)}</span><span class="s">${esc(t.s)}</span></div>`).join('');
+
+// ─── 목록 ───
+$('list-sub').textContent = props.length? `${props.length}건 · 우선순위 순` : '';
+const sorted = [...props].sort((a,b)=>(b.priority_score||0)-(a.priority_score||0));
+const badgeV = (id)=>{ const v=verdictOf(id); if(!v) return `<span class="badge none">미검증</span>`; return `<span class="badge ${v.toLowerCase()}"><span class="dot"></span>${v}</span>`; };
+const windowLabel = {open:'입찰중', upcoming:'예정', ended:'종료', unknown:'—'};
+$('list').innerHTML = sorted.map(p=>`<li><button class="item" data-id="${esc(p.cltrMngNo)}" aria-current="false">
+  <span class="nm">${esc(p.onbidCltrNm||p.cltrAdr||p.cltrMngNo)}</span>
+  <span class="ad">${esc([p.cltrUsgSclsCtgrNm, p.area_sqm?`${Number(p.area_sqm).toFixed(1)}㎡`:null, p.pbctNsq?`${p.pbctNsq}회차`:null].filter(Boolean).join(' · '))}</span>
+  <span class="row"><span>최저 <span class="num">${won(p._low)}</span></span><span>감정 <span class="num">${won(p._apsl)}</span></span>
+    <span class="disc ${p._disc>=30?'hi':''}">${p._disc==null?'—':'−'+pct(p._disc,0)}</span><span>유찰 <span class="num">${esc(p.usbdNft??'—')}</span></span>
+    <span>${windowLabel[p._window]||''} ${p._days!=null&&p._days>=0?`<span class="num">D-${p._days}</span>`:''}</span>
+    ${badgeV(p.cltrMngNo)} ${strat[p.cltrMngNo]?`<span class="badge acc">${esc(stratVerdict(strat[p.cltrMngNo])||'전략')}</span>`:''}</span>
+</button></li>`).join('') || `<div class="empty">01_search_results.json 이 없거나 물건이 없습니다.<br>python3 scripts/search_properties.py … 실행 후 다시 생성하세요.</div>`;
+
+// ─── 상세 ───
+const TABS = [['overview','개요'],['verify','검증'],['strategy','입찰 전략'],['market','시세'],['docs','서류·입지']];
+let curId = null, curTab = 'overview';
+function kv(pairs){ return `<dl class="kv">${pairs.filter(([,v])=>v!=null&&v!=='').map(([k,v,cls])=>`<div><dt>${esc(k)}</dt><dd class="${cls||''}">${v}</dd></div>`).join('')}</dl>`; }
+
+function roundsChart(p){
+  const rs = [...p._rounds].sort((a,b)=>String(a.cltrBidBgngDt||'').localeCompare(String(b.cltrBidBgngDt||'')));
+  if(!rs.length) return `<div class="note">회차 일정(rounds)이 없습니다 — 구 스키마 결과입니다. <code>python3 scripts/search_properties.py --ids ${esc(p.cltrMngNo)}</code> 로 재조회하면 저감 스케줄이 표시됩니다.</div>`;
+  const prices = rs.map(r=>num(r.lowstBidPrc)||0), max = Math.max(...prices, 1);
+  const W=720, H=220, padL=64, padR=12, padT=18, padB=36, iw=W-padL-padR, ih=H-padT-padB;
+  const bw = Math.min(48, iw/rs.length - 6);
+  const step = iw/rs.length;
+  const yTicks = 4; let gridEls='', bars='', labels='';
+  const nice = (()=>{ const raw=max/yTicks; const p10=Math.pow(10,Math.floor(Math.log10(raw))); const m=raw/p10; const s=m<=1?1:m<=2?2:m<=5?5:10; return s*p10; })();
+  const top = nice*Math.ceil(max/nice);
+  for(let i=0;i<=Math.round(top/nice);i++){ const v=i*nice; const y=padT+ih-(v/top)*ih; gridEls+=`<line class="grid" x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/><text x="${padL-8}" y="${(y+4).toFixed(1)}" text-anchor="end">${won(v)}</text>`; }
+  rs.forEach((r,i)=>{ const v=prices[i]; const h=(v/top)*ih; const x=padL+i*step+(step-bw)/2; const y=padT+ih-h;
+    const isCur = String(r.pbctCdtnNo)===String(p.pbctCdtnNo) || (r.pbctNsq===p.pbctNsq && !p.pbctCdtnNo);
+    const isEnded = String(r.cltrBidEndDt||'')<nowKey;
+    bars+=`<rect class="bar ${isCur?'cur':''} ${isEnded?'ended':''}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h,1).toFixed(1)}" rx="3" tabindex="0" data-tip="${esc(`${r.pbctNsq}회차 · ${won(v)} · ${dt(r.cltrBidBgngDt)} ~ ${dt(r.cltrBidEndDt)}${isCur?' · 현재 회차':''}${isEnded?' · 종료':''}`)}"><title>${esc(`${r.pbctNsq}회차 ${wonFull(v)}`)}</title></rect>`;
+    labels+=`<text x="${(x+bw/2).toFixed(1)}" y="${H-padB+14}" text-anchor="middle" class="${isCur?'lbl':''}">${esc(r.pbctNsq)}</text><text x="${(x+bw/2).toFixed(1)}" y="${H-padB+27}" text-anchor="middle" style="font-size:9.5px">${esc(String(r.cltrBidBgngDt||'').slice(4,6))}/${esc(String(r.cltrBidBgngDt||'').slice(6,8))}</text>`;
+    if(isCur) labels+=`<text x="${(x+bw/2).toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" class="lbl">${won(v)}</text>`; });
+  const table = `<div class="scroll"><table><thead><tr><th>회차</th><th>입찰 시작</th><th>입찰 종료</th><th class="r">최저입찰가</th><th class="r">감정가 대비</th><th>상태</th></tr></thead><tbody>${rs.map((r,i)=>{const isCur=String(r.pbctCdtnNo)===String(p.pbctCdtnNo);const isEnded=String(r.cltrBidEndDt||'')<nowKey;return `<tr class="${isCur?'cur':''} ${isEnded?'ended':''}"><td class="num">${esc(r.pbctNsq)}</td><td class="num">${dt(r.cltrBidBgngDt)}</td><td class="num">${dt(r.cltrBidEndDt)}</td><td class="r num">${wonFull(prices[i])}</td><td class="r num">${p._apsl?pct(prices[i]/p._apsl*100,1):'—'}</td><td>${isCur?'<b>현재 회차</b>':(isEnded?'종료':'예약')}</td></tr>`;}).join('')}</tbody></table></div>`;
+  return `<h3 class="sec">회차별 최저입찰가 (저감 스케줄)</h3><div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="회차별 최저입찰가 막대 그래프">${gridEls}${bars}${labels}</svg></div>
+  <details class="tree"><summary>표로 보기 (${rs.length}회차)</summary><div class="tree-body">${table}</div></details>`;
+}
+
+function paneOverview(p){
+  return kv([
+    ['물건관리번호', `<span class="num">${esc(p.cltrMngNo)}</span>`],
+    ['현재 회차', p.pbctNsq? `<span class="num">${esc(p.pbctNsq)}</span> <span style="color:var(--ink-3)">(cdtn ${esc(p.pbctCdtnNo??'—')})</span>` : null],
+    ['최저입찰가', wonFull(p._low), 'num'],
+    ['감정평가액', wonFull(p._apsl), 'num'],
+    ['감정가 대비', p._ratio!=null? `${pct(p._ratio,1)} <span style="color:var(--${p._disc>=30?'good':'ink-2'})">(할인 ${pct(p._disc,1)})</span>`:null, 'num'],
+    ['유찰 횟수', p.usbdNft!=null? `${esc(p.usbdNft)}회`:null, 'num'],
+    ['입찰 기간', `<span class="num">${dt(p.cltrBidBgngDt)} ~ ${dt(p.cltrBidEndDt)}</span>`],
+    ['상태', `${esc(p.pbctStatNm||'')} · ${windowLabel[p._window]||''}${p._days!=null&&p._days>=0?` (D-${p._days})`:''}`],
+    ['용도', [p.cltrUsgMclsCtgrNm,p.cltrUsgSclsCtgrNm].filter(Boolean).map(esc).join(' › ')],
+    ['면적', p.area_sqm? `${Number(p.area_sqm).toFixed(2)}㎡ (${(Number(p.area_sqm)/3.3058).toFixed(1)}평)`:null, 'num'],
+    ['재산 구분', esc(p.prptDivNm||'')],
+    ['우선순위 점수', p.priority_score!=null? `<span class="num">${esc(p.priority_score)}</span>`:null],
+    ['소재지', esc(p.cltrAdr||'')],
+  ]) + roundsChart(p) + (p.apslRatio_api==null && p.rounds ? '' : '') +
+  `<div class="note">온비드 상세: <a href="https://www.onbid.co.kr/op/cta/ctaDetail.do?cltrMngNo=${encodeURIComponent(p.cltrMngNo)}" target="_blank" rel="noopener">onbid.co.kr 물건 페이지</a> · 실제 입찰은 온비드에서 직접 진행합니다.</div>`;
+}
+
+function checksTable(checks){
+  if(!checks) return '';
+  return `<table><thead><tr><th>항목</th><th>결과</th><th>상세</th></tr></thead><tbody>${Object.entries(checks).map(([k,v])=>{const st=typeof v==='string'?v:(v?.status||'—');const det=typeof v==='string'?'':(v?.detail||'');const cls=st==='PASS'?'pass':st==='FAIL'?'fail':st==='WARN'?'warn':'none';return `<tr><td class="num">${esc(k)}</td><td><span class="badge ${cls}">${esc(st)}</span></td><td>${esc(det)}</td></tr>`;}).join('')}</tbody></table>`;
+}
+function paneVerify(p){
+  const v = vmap[p.cltrMngNo];
+  if(!v) return `<div class="note warn">이 물건에 대한 검증 보고서가 없습니다. <code>python3 scripts/verify_results.py phase1</code> 를 실행하세요.</div>`;
+  let h='';
+  if(v.phase1){ h+=`<h3 class="sec">Phase 1.5 — 검색 결과 검증 <span class="badge ${v.phase1.verdict.toLowerCase()}">${esc(v.phase1.verdict)}</span></h3><div class="scroll">${checksTable(v.phase1.checks)}</div>`; if(v1?.verified_at) h+=`<div class="note">검증 시각 ${esc(v1.verified_at)} · 모드 ${esc(v1.mode||'—')}</div>`; }
+  if(v.phase3){ h+=`<h3 class="sec">Phase 3.5 — 입찰 전략 대조 <span class="badge ${v.phase3.verdict.toLowerCase()}">${esc(v.phase3.verdict)}</span></h3><div class="scroll">${checksTable(v.phase3.checks)}</div>`; if(v.phase3.notes) h+=`<ul class="flat">${[].concat(v.phase3.notes).map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`; }
+  return h;
+}
+
+function paneStrategy(p){
+  const s = strat[p.cltrMngNo];
+  if(!s) return `<div class="note">입찰 전략 파일(03_bid_strategy_${esc(p.cltrMngNo)}.json)이 없습니다.</div>`;
+  if(isNewStrat(s)){
+    const r=s.recommendation||{}; const vc = r.verdict==='적극입찰'?'a':r.verdict==='소극입찰'?'p':'h';
+    const icons={conservative:'보수',base:'기준',aggressive:'공격'};
+    const rows = Object.entries(s.scenarios||{}).map(([k,sc])=>`<tr><td><b>${esc(sc.label||icons[k]||k)}</b><div style="font-size:11px;color:var(--ink-3)">최저가×${sc.bidMultiplier} · 시세×${sc.saleMultiplier} · ${sc.inputs?.holdingPeriodMonths}개월</div></td><td class="r num">${wonFull(sc.inputs?.bidPrice)}</td><td class="r num">${wonFull(sc.inputs?.expectedSalePrice)}</td><td class="r num">${pct(sc.bidToAppraisalRatio)}</td><td class="r num">${wonFull(sc.totalAcquisitionCost)}</td><td class="r num" style="color:var(--${(sc.netProfit||0)<0?'crit':'ink'})">${wonFull(sc.netProfit)}</td><td class="r num"><b>${pct(sc.annualizedROI)}</b></td><td class="r num">${(sc.warnings||[]).length}</td></tr>`).join('');
+    return `<div class="verdict ${vc}">판정 ${esc(r.verdict||'—')}${r.bidPrice?` · 권고 입찰가 <span class="num">${wonFull(r.bidPrice)}</span>`:''}</div>
+    ${kv([['감정가',wonFull(s.appraisalValue),'num'],['기준 최저입찰가',wonFull(s.minBidPrice),'num'],['적정가치 (fair value)',wonFull(s.fairValue),'num'],['기준 시나리오 연환산 ROI',pct(r.baseAnnualizedROI),'num'],['권고 범위', r.bidRange?`<span class="num">${wonFull(r.bidRange[0])} ~ ${wonFull(r.bidRange[1])}</span>`:null],['적정가치×0.85 상한',wonFull(r.fairValueCap),'num'],['산출 근거',esc(s.expectedSalePriceBasis||'')],['생성',`${esc(s.generatedAt||'')} · <span class="num">${esc(s.generator||'')}</span>`]])}
+    <h3 class="sec">3 시나리오</h3><div class="scroll"><table><thead><tr><th>시나리오</th><th class="r">입찰가</th><th class="r">예상 매도가</th><th class="r">낙찰가율</th><th class="r">취득비용 합계</th><th class="r">순수익</th><th class="r">연환산 ROI</th><th class="r">경고</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${r.rationale?`<div class="note">${esc(r.rationale)}</div>`:''}
+    ${s.risks?.items?`<h3 class="sec">리스크 기대비용 <span class="num" style="color:var(--ink-2)">${wonFull(s.risks.expectedRiskCost)}</span></h3><div class="scroll"><table><thead><tr><th>리스크</th><th class="r">확률</th><th class="r">영향액</th><th class="r">기대비용</th></tr></thead><tbody>${s.risks.items.map(i=>`<tr><td>${esc(i.risk)}</td><td class="r num">${pct(i.probability*100,0)}</td><td class="r num">${wonFull(i.impact)}</td><td class="r num">${wonFull(i.expectedCost)}</td></tr>`).join('')}</tbody></table></div>`:''}
+    ${(s.warnings||[]).length?`<h3 class="sec">경고</h3><ul class="flat">${s.warnings.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}
+    ${s.analysisNotes?`<h3 class="sec">분석 메모</h3>${tree(s.analysisNotes)}`:''}
+    ${(s.qualitativeRisks||[]).length?`<h3 class="sec">정성 리스크</h3><ul class="flat">${s.qualitativeRisks.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}
+    ${s.disclaimer?`<div class="note" style="margin-top:14px">${esc(s.disclaimer)}</div>`:''}`;
+  }
+  // 구 스키마 (LLM 자유 형식) — 핵심 필드 추정 + 원문 트리
+  const verdict = stratVerdict(s);
+  const minBid = s.minBidPrice ?? s.currentRound?.minBidPrice ?? s.min_bid_price;
+  return `<div class="note warn">roi_calculator.py 출력이 아닌 구 스키마 파일입니다. Phase 3.5 재계산 대조가 불가능하므로 <code>python3 scripts/roi_calculator.py scenarios …</code> 로 재생성을 권장합니다.</div>
+  ${verdict?`<div class="verdict h">판정 ${esc(verdict)}</div>`:''}
+  ${kv([['물건명',esc(s.propertyName||'')],['감정가',s.appraisalValue?wonFull(s.appraisalValue):null,'num'],['기준 최저입찰가',minBid?wonFull(minBid):null,'num'],['권고 입찰가', s.recommended_bid||s.recommendation?.bidPrice ? wonFull(s.recommended_bid||s.recommendation?.bidPrice):null,'num'],['분석일',esc(s.analysisDate||s.analysis_date||'')]])}
+  ${tree(s, '전략 파일 원문')}`;
+}
+
+function paneMarket(p){
+  const m = D.markets?.[p.cltrMngNo], n = D.naver?.[p.cltrMngNo];
+  let h='';
+  if(m && !m._error){
+    const s=m.summary||{};
+    h+=`<h3 class="sec">국토부 실거래가 ${m.kind_label?`· ${esc(m.kind_label)}`:''}</h3>`+kv([
+      ['조회 대상',`${esc(m.apt_keyword||'(전체)')} · ${esc(m.lawd_cd||'')} · ${m.target_area?`${m.target_area}㎡ ±${m.area_tol??''}`:''}`],
+      ['기간',`<span class="num">${esc(m.period||'')}</span>`],
+      ['매매 거래',`<span class="num">${esc(s.trade_count??0)}건</span>${s.trade_latest?` · 최근 ${esc(s.trade_latest)}`:''}`],
+      ['매매 평균 / 중앙',s.trade_avg?`${wonFull(s.trade_avg)} / ${wonFull(s.trade_median)}`:null,'num'],
+      ['매매 최저 ~ 최고',s.trade_min?`${won(s.trade_min)} ~ ${won(s.trade_max)}`:null,'num'],
+      ['㎡당 중앙값',s.price_per_sqm_median?`${Math.round(s.price_per_sqm_median).toLocaleString()}원${s.implied_value_at_target_area?` → 환산 ${won(s.implied_value_at_target_area)}`:''}`:null,'num'],
+      ['전세',s.jeonse_count?`${s.jeonse_count}건 · 평균 ${won(s.jeonse_avg)}${s.jeonse_ratio_pct?` · 전세가율 ${pct(s.jeonse_ratio_pct)}`:''}`:null,'num'],
+      ['월세',s.wolse_count?`${s.wolse_count}건`:null,'num'],
+      ['시세 vs 감정가',s.vs_apsl_pct!=null?`<span style="color:var(--${s.vs_apsl_pct>=0?'good':'crit'})">${s.vs_apsl_pct>=0?'+':''}${pct(s.vs_apsl_pct)}</span> (${won(s.vs_apsl)})`:null,'num'],
+      ['시세 vs 최저가',s.vs_lowbid_pct!=null?`${s.vs_lowbid_pct>=0?'+':''}${pct(s.vs_lowbid_pct)} (${won(s.vs_lowbid)})`:null,'num'],
+      ['건축년도',s.build_year?esc(s.build_year):null],
+    ]);
+    if(s.liquidity_flag && s.liquidity_flag!=='OK') h+=`<div class="note warn">${esc(s.liquidity_flag)}</div>`;
+    const tr=(m.trade||[]).slice().sort((a,b)=>String(b.dealYMD).localeCompare(String(a.dealYMD))).slice(0,15);
+    if(tr.length) h+=`<details class="tree"><summary>매매 실거래 ${m.trade.length}건 (최근 ${tr.length}건)</summary><div class="tree-body scroll"><table><thead><tr><th>일자</th><th>명칭</th><th class="r">면적</th><th class="r">층</th><th class="r">금액</th><th>구분</th></tr></thead><tbody>${tr.map(t=>`<tr><td class="num">${esc(t.dealYMD)}</td><td>${esc(t.name||t.aptNm||t.umdNm||'')}</td><td class="r num">${t.area?Number(t.area).toFixed(1):'—'}</td><td class="r num">${esc(t.floor||'—')}</td><td class="r num">${wonFull(t.dealAmount)}</td><td>${esc(t.dealingGbn||'')}</td></tr>`).join('')}</tbody></table></div></details>`;
+    if((m.errors||[]).length) h+=`<div class="note crit">API 오류 ${m.errors.length}건: ${esc(JSON.stringify(m.errors[0]))}</div>`;
+  } else h+=`<div class="note">국토부 실거래 파일(market_${esc(p.cltrMngNo)}.json)이 없습니다. <code>python3 scripts/fetch_market_data.py --kind … --cltr-mng-no ${esc(p.cltrMngNo)}</code></div>`;
+  if(n && !n._error){
+    const g=n.gap_analysis||{};
+    h+=`<h3 class="sec">네이버 부동산 호가</h3>`+kv([['단지',`${esc(n.complex_name||'—')} <span style="color:var(--ink-3)">(${esc(n.scope||'')})</span>`],['매매 호가',n.sale?.avg?`${won(n.sale.avg)} (${n.sale.count}건, ${won(n.sale.min)}~${won(n.sale.max)})`:null,'num'],['호가 vs 실거래',g.naver_vs_molit_pct!=null?pct(g.naver_vs_molit_pct):null,'num'],['호가 vs 감정가',g.naver_vs_apsl_pct!=null?pct(g.naver_vs_apsl_pct):null,'num'],['조회',esc(n.fetched_at||'')]]);
+  }
+  return h;
+}
+
+function paneDocs(p){
+  const d=D.docs?.[p.cltrMngNo], l=D.locations?.[p.cltrMngNo];
+  let h='';
+  if(l && !l._error){
+    h+=`<h3 class="sec">입지 분석</h3>`;
+    if(l.scores){ h+=`<div class="kv">${Object.entries(l.scores).map(([k,v])=>`<div><dt>${esc({transport:'교통',infra:'인프라',development:'개발',price_trend:'시세 추이',total:'종합'}[k]||k)}</dt><dd class="num">${esc(v)} <span style="color:var(--ink-3);font-size:12px">/ 5</span></dd></div>`).join('')}</div>`; }
+    if(l.investment_summary) h+=`<div class="note good">${esc(l.investment_summary)}</div>`;
+    if(Array.isArray(l.risk_factors)&&l.risk_factors.length) h+=`<ul class="flat">${l.risk_factors.map(r=>`<li>${esc(typeof r==='string'?r:JSON.stringify(r))}</li>`).join('')}</ul>`;
+    h+=tree(l,'입지 분석 원문');
+  } else h+=`<div class="note">입지 분석 파일이 없습니다.</div>`;
+  if(d && !d._error){
+    h+=`<h3 class="sec">서류 분석</h3>`;
+    const a=d.appraisal||{};
+    h+=kv([['감정평가액', a.amount?wonFull(a.amount):null,'num'],['기준시점',esc(a.base_date||'')],['평가 방법',esc(a.method||'')],['준공',a.build_year?esc(a.build_year):null],['구조',esc(a.structure||'')]]);
+    const flags = Array.isArray(d.risk_flags)? d.risk_flags : [];
+    if(flags.length) h+=`<ul class="flat">${flags.map(f=>typeof f==='string'?`<li>${esc(f)}</li>`:`<li>${f.negated?'<span class="badge pass">해당 없음</span> ':'<span class="badge warn">확인</span> '}${esc(f.message||f.keyword||'')}</li>`).join('')}</ul>`;
+    const man = d.manual_review_needed; if(Array.isArray(man)&&man.length) h+=`<div class="note warn"><b>수동 확인 필요</b><ul class="flat">${man.map(x=>`<li>${esc(typeof x==='string'?x:JSON.stringify(x))}</li>`).join('')}</ul></div>`;
+    h+=tree(d,'서류 분석 원문');
+  } else h+=`<div class="note">서류 분석 파일이 없습니다. PDF 를 <code>_workspace/docs/${esc(p.cltrMngNo)}/</code> 에 두고 <code>python3 scripts/analyze_documents.py --cltr-mng-no ${esc(p.cltrMngNo)}</code></div>`;
+  return h;
+}
+
+function tree(obj, label='원문 보기', depth=0){
+  if(obj==null) return '';
+  const body = (o,dp)=>{ if(Array.isArray(o)){ if(!o.length) return '<span style="color:var(--ink-3)">[]</span>'; return o.map((v,i)=>`<div class="tree-kv"><span class="k">[${i}]</span><span class="v">${leaf(v,dp)}</span></div>`).join(''); }
+    return Object.entries(o).map(([k,v])=>`<div class="tree-kv"><span class="k">${esc(k)}</span><span class="v">${leaf(v,dp)}</span></div>`).join(''); };
+  const leaf = (v,dp)=>{ if(v==null) return '<span style="color:var(--ink-3)">null</span>'; if(typeof v==='object'){ if(dp>=4) return `<span class="num">${esc(JSON.stringify(v))}</span>`; return `<details class="tree" ${dp<1?'open':''}><summary>${Array.isArray(v)?`배열 ${v.length}`:`객체 ${Object.keys(v).length}`}</summary><div class="tree-body">${body(v,dp+1)}</div></details>`; } if(typeof v==='number') return `<span class="num">${Number.isInteger(v)&&Math.abs(v)>=1e4?v.toLocaleString():v}</span>`; return esc(String(v)); };
+  return `<details class="tree" ${depth?'':''}><summary>${esc(label)}</summary><div class="tree-body">${body(obj,0)}</div></details>`;
+}
+
+function render(){
+  const p = byId[curId];
+  document.querySelectorAll('.item').forEach(b=>b.setAttribute('aria-current', b.dataset.id===curId?'true':'false'));
+  if(!p){ $('tabs').innerHTML=''; $('pane').innerHTML=`<div class="empty">왼쪽 목록에서 물건을 선택하세요.</div>`; return; }
+  $('tabs').innerHTML = TABS.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===curTab}">${l}${k==='verify'&&verdictOf(p.cltrMngNo)?` <span class="badge ${verdictOf(p.cltrMngNo).toLowerCase()}" style="margin-left:4px">${verdictOf(p.cltrMngNo)}</span>`:''}</button>`).join('');
+  const head = `<div class="dtitle">${esc(p.onbidCltrNm||p.cltrMngNo)}</div><div class="dsub"><span class="num">${esc(p.cltrMngNo)}</span><span>${esc(p.prptDivNm||'')}</span><span>${esc(p.cltrUsgSclsCtgrNm||'')}</span></div>`;
+  const fn = {overview:paneOverview, verify:paneVerify, strategy:paneStrategy, market:paneMarket, docs:paneDocs}[curTab];
+  $('pane').innerHTML = head + fn(p);
+}
+$('list').addEventListener('click', e=>{ const b=e.target.closest('.item'); if(!b) return; curId=b.dataset.id; render(); if(window.innerWidth<860) $('detail').scrollIntoView({behavior:'smooth',block:'start'}); });
+$('tabs').addEventListener('click', e=>{ const t=e.target.closest('.tab'); if(!t) return; curTab=t.dataset.tab; render(); });
+// 툴팁
+const tip=$('tip');
+document.addEventListener('mousemove', e=>{ const el=e.target.closest?.('[data-tip]'); if(!el){ tip.style.display='none'; return; } tip.textContent=el.dataset.tip; tip.style.display='block'; tip.style.left=Math.min(e.clientX+12, window.innerWidth-tip.offsetWidth-8)+'px'; tip.style.top=(e.clientY+14)+'px'; });
+document.addEventListener('focusin', e=>{ const el=e.target.closest?.('[data-tip]'); if(!el) return; const r=el.getBoundingClientRect(); tip.textContent=el.dataset.tip; tip.style.display='block'; tip.style.left=r.left+'px'; tip.style.top=(r.top-30)+'px'; });
+document.addEventListener('focusout', ()=>{ tip.style.display='none'; });
+
+// 초기 선택: 전략이 있는 물건 > 첫 물건
+curId = (sorted.find(p=>strat[p.cltrMngNo])||sorted[0])?.cltrMngNo || null;
+render();
+
+// ─── 최종 보고서 (마크다운) ───
+function md(src){
+  const lines = src.replace(/\r/g,'').split('\n'); let out=[], i=0;
+  const inline = (s)=>esc(s).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*]+)\*/g,'$1<i>$2</i>').replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  while(i<lines.length){ const ln=lines[i];
+    if(/^```/.test(ln)){ let buf=[]; i++; while(i<lines.length&&!/^```/.test(lines[i])) buf.push(lines[i++]); i++; out.push(`<pre><code>${esc(buf.join('\n'))}</code></pre>`); continue; }
+    if(/^\|/.test(ln)){ let rows=[]; while(i<lines.length&&/^\|/.test(lines[i])) rows.push(lines[i++]); const cells=r=>r.replace(/^\||\|$/g,'').split('|').map(c=>c.trim()); const body=rows.filter(r=>!/^\|\s*:?-{2,}/.test(r)); const [h,...rest]=body; out.push(`<div class="scroll"><table><thead><tr>${cells(h).map(c=>`<th>${inline(c)}</th>`).join('')}</tr></thead><tbody>${rest.map(r=>`<tr>${cells(r).map(c=>`<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`); continue; }
+    const hm=/^(#{1,6})\s+(.*)/.exec(ln); if(hm){ const lv=Math.min(hm[1].length,3); out.push(`<h${lv}>${inline(hm[2])}</h${lv}>`); i++; continue; }
+    if(/^\s*---+\s*$/.test(ln)){ out.push('<hr>'); i++; continue; }
+    if(/^>/.test(ln)){ let buf=[]; while(i<lines.length&&/^>/.test(lines[i])) buf.push(lines[i++].replace(/^>\s?/,'')); out.push(`<blockquote>${md(buf.join('\n'))}</blockquote>`); continue; }
+    if(/^\s*([-*]|\d+\.)\s+/.test(ln)){ const ordered=/^\s*\d+\./.test(ln); let items=[]; while(i<lines.length&&/^\s*([-*]|\d+\.)\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*([-*]|\d+\.)\s+/,'')); out.push(`<${ordered?'ol':'ul'}>${items.map(x=>`<li>${inline(x)}</li>`).join('')}</${ordered?'ol':'ul'}>`); continue; }
+    if(!ln.trim()){ i++; continue; }
+    let buf=[]; while(i<lines.length&&lines[i].trim()&&!/^(#{1,6}\s|```|\||>|\s*([-*]|\d+\.)\s|\s*---+\s*$)/.test(lines[i])) buf.push(lines[i++]); out.push(`<p>${inline(buf.join(' '))}</p>`);
+  }
+  return out.join('\n');
+}
+const reps = D.reports||[];
+if(reps.length){
+  $('report').innerHTML = `<div class="panel-h"><h2>최종 보고서</h2><span class="sub">${reps.map(r=>esc(r.name)).join(' · ')}</span></div>` +
+    reps.map((r,idx)=>`<details ${idx===0?'open':''} style="padding:6px 16px 14px"><summary style="cursor:pointer;font-weight:600;font-size:13px;padding:6px 0">${esc(r.name)}</summary><div class="md">${md(r.text)}</div></details>`).join('');
+} else $('report').innerHTML = `<div class="panel-h"><h2>최종 보고서</h2></div><div class="empty">final_report_*.md 가 없습니다.</div>`;
+$('files').innerHTML = `<span>워크스페이스 파일:</span>` + (D.files||[]).map(f=>`<code>${esc(f)}</code>`).join('');
+})();
+</script>
