@@ -36,6 +36,8 @@ Phase 4   report-generation                 → final_report_{날짜}.md
 | `roi_calculator.py` | 경매 ROI / 갭투자 ROE / 3시나리오 / 취득세율 | `python3 scripts/roi_calculator.py scenarios --appraisal 2.5e8 --min-bid 2e8 --fair-value 2.55e8 --kind house --area-sqm 59` |
 | `fetch_market_data.py` | 국토부 실거래가 (`--kind apt\|offi\|rh\|sh\|land\|shop`) | `python3 scripts/fetch_market_data.py --kind rh --keyword 호안빌 --lawd-cd "서울 은평구" --area 39.94` |
 | `analyze_documents.py` | 감정평가서·재산명세서 PDF 분석 골격 | `python3 scripts/analyze_documents.py --cltr-mng-no 2026-16156-004` |
+| `snapshot_market.py` | 압류재산 전체(공고 약 360건 → 물건·회차 전수) 스냅샷, 약 7분 | `python3 scripts/snapshot_market.py` → `_workspace/market_snapshot.json` |
+| `build_meteor.py` | 스냅샷 → "공매 유성우" 시각화 (전국 물건의 저감 궤적, 날짜·예산 탐색) | `python3 scripts/build_meteor.py` → `_workspace/meteor.html` |
 | `build_dashboard.py` | `_workspace/` 산출물을 한 페이지 대시보드 HTML 로 (오프라인, 데이터 내장) | `python3 scripts/build_dashboard.py` → `_workspace/dashboard.html` |
 | `fetch_naver_listings.py` | 네이버 부동산 호가 | `python3 scripts/fetch_naver_listings.py --keyword 일신 --lawd-cd 41650 --area 49.92` |
 | `fetch_ranking_stats.py` | 조회수/관심/저감률 순위, 입찰결과, 용도별 통계 | `python3 scripts/fetch_ranking_stats.py discount-rank --cltr-div 부동산` |

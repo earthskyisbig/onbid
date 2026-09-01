@@ -1,0 +1,360 @@
+<title>공매 유성우</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#070B14; --bg-2:#0B1220; --surface:#0F1626; --surface-2:#141D31; --line:#1D283D; --line-2:#2A3852;
+  --ink:#E8EDF5; --ink-2:#9AA8BC; --ink-3:#5F6E85;
+  --amber:#FFB347; --amber-2:#F59E0B; --amber-deep:#B45309; --amber-glow:rgba(255,179,71,.55);
+  --cold:#3D4E6E; --cold-2:#2A3A55; --white:#FFFFFF;
+  --good:#4ADE80; --warn:#FBBF24; --crit:#F87171;
+  --display:"Black Han Sans","Apple SD Gothic Neo",sans-serif;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#141F3A 0%,var(--bg) 55%);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:var(--amber)}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1360px;margin:0 auto;padding:18px clamp(12px,3vw,32px) 60px}
+
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 24px;margin-bottom:14px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);line-height:1;margin:4px 0 0;letter-spacing:.01em;color:var(--white);text-shadow:0 0 24px rgba(255,179,71,.25)}
+h1 em{font-style:normal;color:var(--amber)}
+.lede{max-width:62ch;color:var(--ink-2);font-size:13.5px;margin-top:8px}
+.lede b{color:var(--ink);font-weight:500}
+.snap{font-size:12px;color:var(--ink-3);text-align:right}
+.snap .num{color:var(--ink-2)}
+
+.controls{display:grid;grid-template-columns:1.4fr 1fr;gap:10px 16px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+@media (max-width:900px){.controls{grid-template-columns:1fr}}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
+.ctl label .val{font-family:var(--mono);font-size:14px;color:var(--amber);letter-spacing:0;text-transform:none}
+.daterow{display:flex;align-items:center;gap:10px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--line-2);border-radius:2px;outline-offset:6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--amber);border:3px solid var(--bg);box-shadow:0 0 0 1px var(--amber),0 0 14px var(--amber-glow);cursor:grab}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--amber);border:2px solid var(--bg);cursor:grab}
+.play{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line-2);display:grid;place-items:center;color:var(--amber);flex:none}
+.play:hover{border-color:var(--amber)}
+.play svg{width:14px;height:14px;fill:currentColor}
+.chips{display:flex;flex-wrap:wrap;gap:5px;grid-column:1/-1}
+.chip{padding:3px 10px;border-radius:999px;border:1px solid var(--line-2);background:transparent;font-size:12px;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--amber);color:#1A1200;border-color:var(--amber);font-weight:600}
+.chip .c{font-family:var(--mono);opacity:.7;margin-left:4px;font-size:11px}
+.search{background:var(--bg-2);border:1px solid var(--line-2);border-radius:6px;padding:6px 10px;color:var(--ink);width:100%}
+.search::placeholder{color:var(--ink-3)}
+
+.stage{position:relative;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage canvas{display:block;width:100%}
+.legend{position:absolute;left:14px;top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--ink-2);pointer-events:none;background:rgba(7,11,20,.55);padding:4px 8px;border-radius:6px;backdrop-filter:blur(4px)}
+.legend i{display:inline-block;width:22px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend .d{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber-glow);vertical-align:middle;margin-right:5px}
+.hint{position:absolute;right:14px;top:12px;font-size:11.5px;color:var(--ink-3);pointer-events:none}
+.tip{position:fixed;z-index:20;pointer-events:none;display:none;background:#111A2C;border:1px solid var(--line-2);color:var(--ink);padding:8px 10px;border-radius:6px;font-size:12px;max-width:320px;box-shadow:0 12px 30px -10px rgba(0,0,0,.8)}
+.tip b{color:var(--white);font-weight:600}
+.tip .num{color:var(--amber)}
+.tip .m{color:var(--ink-3);font-size:11px;margin-top:3px}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:74px;display:flex;flex-direction:column;gap:2px}
+.tile .l{font-size:11px;color:var(--ink-3);letter-spacing:.05em}
+.tile .v{font-family:var(--mono);font-size:24px;line-height:1.1;color:var(--white)}
+.tile .v.amber{color:var(--amber)}
+.tile .s{font-size:11.5px;color:var(--ink-2)}
+
+.below{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:12px;align-items:start}
+@media (max-width:900px){.below{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.panel-h h2{margin:0;font-family:var(--display);font-weight:400;font-size:17px;letter-spacing:.02em;color:var(--white)}
+.panel-h .sub{font-size:12px;color:var(--ink-3)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:11px;color:var(--ink-3);font-weight:600;letter-spacing:.05em;white-space:nowrap}
+td.r,th.r{text-align:right;white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--surface-2)}
+tbody tr.pin td{background:#1E2A44}
+.nm{color:var(--ink);font-weight:500;overflow-wrap:anywhere}
+.sub2{color:var(--ink-3);font-size:11px}
+.disc{font-family:var(--mono);color:var(--amber)}
+.scroll{overflow-x:auto}
+.card{padding:14px}
+.card h3{margin:0 0 4px;font-size:15px;font-weight:600;color:var(--white);overflow-wrap:anywhere}
+.card .meta{color:var(--ink-2);font-size:12px;display:flex;flex-wrap:wrap;gap:4px 10px;margin-bottom:10px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin:0 0 10px}
+.kv div{border-top:1px solid var(--line);padding-top:5px}
+.kv dt{font-size:11px;color:var(--ink-3)}
+.kv dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--ink)}
+.rounds td{padding:4px 8px;font-family:var(--mono);font-size:12px}
+.rounds tr.now td{color:var(--amber)}
+.rounds tr.past td{color:var(--ink-3)}
+.empty{padding:26px 14px;color:var(--ink-3);text-align:center;font-size:13px}
+.foot{margin-top:18px;font-size:12px;color:var(--ink-3);max-width:80ch}
+.foot code{font-family:var(--mono);color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.play{display:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Onbid · 압류재산 공매 · 저감 스케줄 시각화</div>
+      <h1>공매 <em>유성우</em></h1>
+      <p class="lede">온비드 압류재산은 유찰될 때마다 최저입찰가가 <b>매주 10%p씩</b> 떨어지고, 그 회차들이 미리 예약돼 있습니다. 전국 물건 하나하나의 궤적을 달력 위에 겹쳐 그렸습니다. 날짜를 문지르면 <b>그날 내 예산 안으로 들어오는 물건</b>이 밝아집니다.</p>
+    </div>
+    <div class="snap" id="snap"></div>
+  </header>
+
+  <section class="controls" aria-label="필터">
+    <div class="ctl">
+      <label><span>기준일</span><span class="val" id="dateVal">—</span></label>
+      <div class="daterow">
+        <button class="play" id="play" aria-label="날짜 재생/정지"><svg viewBox="0 0 16 16" id="playIcon"><path d="M3 2l11 6-11 6z"/></svg></button>
+        <input type="range" id="date" min="0" max="100" value="0" step="1" aria-label="기준일">
+      </div>
+    </div>
+    <div class="ctl">
+      <label><span>내 예산 (최저입찰가 상한)</span><span class="val" id="budgetVal">—</span></label>
+      <input type="range" id="budget" min="0" max="1000" value="600" step="1" aria-label="예산">
+    </div>
+    <div class="chips" id="sidoChips" role="group" aria-label="지역"></div>
+    <div class="chips" id="usageChips" role="group" aria-label="용도"></div>
+    <div class="ctl" style="grid-column:1/-1"><input class="search" id="q" placeholder="물건명·주소·물건관리번호 검색 (예: 아파트, 강남구, 2026-15932)" aria-label="검색"></div>
+  </section>
+
+  <div class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <canvas id="strip"></canvas>
+    <div class="legend"><span><span class="d"></span>예산 안 · 입찰 가능</span><span><i style="border-color:var(--amber-2)"></i>예산 안 궤적</span><span><i style="border-color:var(--cold)"></i>예산 밖</span><span><i style="border-color:var(--ink-3);opacity:.6"></i>예약된 미래 회차 (흐림)</span></div>
+    <div class="hint">드래그 = 날짜 이동 · 궤적에 마우스 = 물건 · 클릭 = 고정</div>
+  </div>
+  <div class="tip" id="tip"></div>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="below">
+    <div class="panel">
+      <div class="panel-h"><h2>이날 예산 안에 들어오는 물건</h2><span class="sub" id="boardSub"></span></div>
+      <div class="scroll"><table><thead><tr><th>#</th><th>물건</th><th>지역 · 용도</th><th class="r">최저입찰가</th><th class="r">감정가 대비</th><th class="r">회차</th></tr></thead><tbody id="board"></tbody></table></div>
+    </div>
+    <div class="panel" id="detail"><div class="panel-h"><h2>물건 상세</h2><span class="sub">궤적을 클릭하면 고정됩니다</span></div><div class="empty">아직 선택된 물건이 없습니다.</div></div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script type="application/json" id="data">__METEOR_DATA__</script>
+<script>
+(function(){
+'use strict';
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = id=>document.getElementById(id);
+const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const won = v=>{ if(v==null) return '—'; const a=Math.abs(v); if(a>=1e12) return (a/1e12).toFixed(2).replace(/\.?0+$/,'')+'조'; if(a>=1e8) return (a/1e8).toFixed(a>=1e9?1:2).replace(/\.?0+$/,'')+'억'; if(a>=1e4) return Math.round(a/1e4).toLocaleString()+'만'; return Math.round(a).toLocaleString()+'원'; };
+const wonFull = v=> v==null?'—':Math.round(v).toLocaleString()+'원';
+const pct = (v,d=0)=> v==null?'—':v.toFixed(d)+'%';
+const DAY = 864e5;
+const toMs = s=>{ s=String(s||''); if(s.length<8) return NaN; return new Date(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8),+(s.slice(8,10)||0),+(s.slice(10,12)||0)).getTime(); };
+const fmtD = ms=>{ const d=new Date(ms); const w='일월화수목금토'[d.getDay()]; return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} (${w})`; };
+const fmtMD = ms=>{ const d=new Date(ms); return `${d.getMonth()+1}/${d.getDate()}`; };
+const hash = s=>{ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return (h>>>0)/4294967295; };
+
+// ─── 데이터 준비 ───
+const props = [];
+for(const a of D.properties){
+  const [id,name,sido,sgg,usageM,usageS,apsl,usbdNft,flat] = a;
+  if(!apsl || !flat?.length) continue;
+  const rounds=[]; for(let i=0;i<flat.length;i+=4){ const bgn=toMs(flat[i+1]), end=toMs(flat[i+2]); if(isNaN(bgn)||isNaN(end)||end<=bgn) continue; rounds.push({nsq:flat[i], bgn, end, price:flat[i+3], ratio:flat[i+3]/apsl*100}); }
+  if(!rounds.length) continue; rounds.sort((a,b)=>a.bgn-b.bgn);
+  const g = usageM.includes('토지')?'토지':usageM.includes('주거')?'주거':(usageM.includes('상업')||usageM.includes('업무'))?'상업·업무':'산업·기타';
+  props.push({id,name,sido,sgg,usageM,usageS,apsl,usbdNft,rounds, group:g, jit:(hash(id)-0.5)*8, key:(name+' '+id+' '+sido+' '+sgg+' '+usageS).toLowerCase()});
+}
+const dayFloor = ms=>{ const d=new Date(ms); return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(); };
+let T0=Infinity, T1=-Infinity; for(const p of props){ T0=Math.min(T0,p.rounds[0].bgn); T1=Math.max(T1,p.rounds[p.rounds.length-1].end); }
+const today = dayFloor(Date.now());
+const tMin = dayFloor(Math.max(T0, today-45*DAY)) - DAY, tMax = dayFloor(T1) + 2*DAY;
+const nDays = Math.round((tMax-tMin)/DAY);
+const snapMs = D.snapshot_at? new Date(D.snapshot_at.replace(' ','T')).getTime() : Date.now();
+$('snap').innerHTML = `스냅샷 <span class="num">${esc(D.snapshot_at||'')}</span> · 공고 <span class="num">${D.pbanc_count}</span>건 · 물건 <span class="num">${props.length.toLocaleString()}</span>건<br>표시 기간 <span class="num">${fmtMD(tMin)} ~ ${fmtMD(tMax)}</span> (오늘 45일 전부터) · 온비드 Open API 압류재산(0007)`;
+
+// 예산 슬라이더: 로그 스케일 100만 ~ 50억
+const BMIN=1e6, BMAX=5e9;
+const budgetOf = v => Math.round(Math.exp(Math.log(BMIN)+ (v/1000)*(Math.log(BMAX)-Math.log(BMIN))));
+let t = Math.min(Math.max(today, tMin), tMax), budget = budgetOf(600), sido='전체', group='전체', q='', pinned=null, hover=null;
+$('date').max = nDays; $('date').value = Math.round((t-tMin)/DAY);
+
+// 칩
+const sidos = ['전체', ...Object.entries(props.reduce((m,p)=>(m[p.sido]=(m[p.sido]||0)+1,m),{})).sort((a,b)=>b[1]-a[1]).map(([k])=>k)];
+const groups = ['전체','주거','토지','상업·업무','산업·기타'];
+const cnt = (f)=>props.filter(f).length;
+function chips(el, list, cur, countOf, on){ el.innerHTML = list.map(k=>`<button class="chip" aria-pressed="${k===cur}" data-k="${esc(k)}">${esc(k)}<span class="c">${countOf(k)}</span></button>`).join(''); el.onclick=e=>{const b=e.target.closest('.chip'); if(!b) return; on(b.dataset.k); }; }
+const drawChips = ()=>{ chips($('sidoChips'), sidos, sido, k=>k==='전체'?props.length:cnt(p=>p.sido===k), k=>{sido=k; drawChips(); update();}); chips($('usageChips'), groups, group, k=>k==='전체'?props.length:cnt(p=>p.group===k), k=>{group=k; drawChips(); update();}); };
+drawChips();
+$('q').addEventListener('input', e=>{ q=e.target.value.trim().toLowerCase(); update(); });
+$('budget').addEventListener('input', e=>{ budget=budgetOf(+e.target.value); update(); });
+$('date').addEventListener('input', e=>{ t=tMin+(+e.target.value)*DAY; update(); });
+
+// ─── 상태 계산 ───
+function stateAt(p, tt){
+  // 현재 위치: tt 시점에 시작된 가장 최근 회차. active = 입찰창 안. 다음 회차 정보도.
+  let cur=null, next=null;
+  for(const r of p.rounds){ if(r.bgn<=tt) cur=r; else { next=r; break; } }
+  const active = !!cur && tt<=cur.end;
+  return {cur, next, active, price: cur? cur.price : null, ratio: cur? cur.ratio : null};
+}
+let visible=[], inBudget=[], activeSet=[];
+function recompute(){
+  visible = props.filter(p=>(sido==='전체'||p.sido===sido)&&(group==='전체'||p.group===group)&&(!q||p.key.includes(q)));
+  for(const p of visible){ p.st = stateAt(p,t); p.st.inBudget = p.st.price!=null && p.st.price<=budget; }
+  activeSet = visible.filter(p=>p.st.active);
+  inBudget = activeSet.filter(p=>p.st.inBudget).sort((a,b)=>a.st.ratio-b.st.ratio);
+}
+
+// ─── 캔버스 ───
+const cv=$('cv'), ctx=cv.getContext('2d'), strip=$('strip'), sctx=strip.getContext('2d');
+let W=0,H=0,SH=54,dpr=1; const padL=66,padR=16,padT=40,padB=30;
+function resize(){ dpr=Math.min(window.devicePixelRatio||1,2); W=$('stage').clientWidth; H=Math.max(380,Math.min(560,Math.round(W*0.42))); cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+'px'; strip.width=W*dpr; strip.height=SH*dpr; strip.style.height=SH+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); sctx.setTransform(dpr,0,0,dpr,0,0); draw(); }
+const X = ms=> padL + (ms-tMin)/(tMax-tMin)*(W-padL-padR);
+const Y = ratio=> padT + (1-Math.min(Math.max(ratio,0),110)/110)*(H-padT-padB);
+const invX = x=> tMin + (x-padL)/(W-padL-padR)*(tMax-tMin);
+let reveal=0, revealStart=performance.now(), rafId=null;
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function pathOf(p){ // 계단 경로 좌표
+  const pts=[]; p.rounds.forEach((r,i)=>{ const y=Y(r.ratio+p.jit); if(i>0) pts.push([X(r.bgn), Y(p.rounds[i-1].ratio+p.jit), 'drop']); pts.push([X(r.bgn),y,'b']); pts.push([X(r.end),y,'e']); }); return pts; }
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // 그리드
+  ctx.font='11px "IBM Plex Mono",monospace'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(let r=0;r<=100;r+=20){ const y=Y(r); ctx.strokeStyle='#1A2436'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke(); ctx.fillStyle='#5F6E85'; ctx.fillText(r+'%', padL-8, y); }
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const wk = 7*DAY; for(let ms=Math.ceil(tMin/wk)*wk; ms<=tMax; ms+=wk){ const d=new Date(ms); const mon = d.getDate()<=7; const x=X(ms); ctx.strokeStyle= mon?'#243149':'#131C2C'; ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,H-padB); ctx.stroke(); if(mon){ ctx.fillStyle='#7C8AA0'; ctx.fillText(`${d.getFullYear()}.${d.getMonth()+1}`, x, H-padB+8); } }
+  ctx.save(); ctx.translate(12, (padT+H-padB)/2); ctx.rotate(-Math.PI/2); ctx.fillStyle='#5F6E85'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('감정가 대비 최저입찰가', 0, 0); ctx.restore();
+
+  const xT = X(t), xRev = padL + reveal*(W-padL-padR);
+  // 궤적: 예산 밖 → 예산 안 → 강조 순
+  const layers = [[],[],[]];
+  for(const p of visible){ const hi = p===pinned||p===hover; layers[hi?2:(p.st.inBudget?1:0)].push(p); }
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  layers.forEach((arr,li)=>{
+    const hi = li===2;
+    ctx.globalCompositeOperation = hi? 'source-over' : 'lighter';
+    for(const p of arr){
+      const pts=pathOf(p);
+      for(const fut of [false,true]){
+        ctx.setLineDash(hi&&fut?[4,5]:[]);
+        const dens = Math.min(1, 400/Math.max(visible.length,1));   // 표시 건수에 따라 투명도 자동 조절
+        ctx.lineWidth = hi?2.4:0.8;
+        ctx.strokeStyle = hi? (fut?'rgba(255,255,255,.6)':'#FFFFFF')
+                         : li===1? (fut?`rgba(245,158,11,${(.08+.2*dens).toFixed(3)})`:`rgba(255,179,71,${(.12+.3*dens).toFixed(3)})`)
+                                 : (fut?`rgba(90,120,170,${(.05+.12*dens).toFixed(3)})`:`rgba(90,120,170,${(.08+.2*dens).toFixed(3)})`);
+        const clipL = fut? xT : padL, clipR = fut? Math.min(xRev, W-padR) : Math.min(xT, xRev);
+        ctx.beginPath();
+        for(let i=0;i<pts.length;i++){ const [x,y]=pts[i];
+          const xx=Math.max(clipL,Math.min(clipR,x));
+          if(i===0){ ctx.moveTo(xx,y); continue; }
+          const [px]=pts[i-1];
+          if((x<clipL && px<clipL) || (x>clipR && px>clipR)){ ctx.moveTo(xx,y); continue; }
+          ctx.lineTo(xx,y);
+        }
+        ctx.stroke();
+      }
+    }
+  });
+  ctx.globalCompositeOperation='source-over';
+  ctx.setLineDash([]);
+  // 머리 (활성 회차)
+  if(reveal>=0.98){
+    for(const p of activeSet){ const y=Y(p.st.ratio+p.jit); const hi=p===pinned||p===hover;
+      if(hi){ ctx.shadowColor='rgba(255,255,255,.9)'; ctx.shadowBlur=16; ctx.fillStyle='#FFFFFF'; ctx.beginPath(); ctx.arc(xT,y,4.5,0,7); ctx.fill(); ctx.shadowBlur=0; }
+      else if(p.st.inBudget){ ctx.fillStyle='rgba(255,179,71,.85)'; ctx.beginPath(); ctx.arc(xT,y,2.2,0,7); ctx.fill(); }
+      else { ctx.fillStyle='rgba(107,125,156,.6)'; ctx.beginPath(); ctx.arc(xT,y,1.6,0,7); ctx.fill(); }
+    }
+  }
+  // 기준일 선
+  ctx.strokeStyle='rgba(255,179,71,.85)'; ctx.lineWidth=1.5; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(xT,padT-6); ctx.lineTo(xT,H-padB); ctx.stroke();
+  { const lbl=fmtD(t); ctx.font='600 11px "IBM Plex Mono",monospace'; const tw=ctx.measureText(lbl).width+12; const right = xT>W-tw-20; const bx = right? xT-8-tw : xT+8; const by=H-padB-24;
+    ctx.fillStyle='rgba(7,11,20,.85)'; ctx.strokeStyle='rgba(255,179,71,.6)'; ctx.lineWidth=1; ctx.beginPath(); ctx.roundRect(bx,by,tw,18,4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#FFB347'; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText(lbl, bx+6, by+9); }
+  if(today>=tMin&&today<=tMax&&Math.abs(today-t)>DAY/2){ const x=X(today); ctx.strokeStyle='rgba(154,168,188,.35)'; ctx.setLineDash([2,4]); ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,H-padB); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle='#7C8AA0'; ctx.font='10px "IBM Plex Mono",monospace'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('오늘', x, H-padB-4); }
+  // 예산선 표시: 예산이 어느 비율선인지는 물건마다 다르므로 텍스트만
+  ctx.fillStyle='#9AA8BC'; ctx.font='11px "IBM Plex Sans KR",sans-serif'; ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText(`표시 ${visible.length.toLocaleString()}건 · 입찰창 열림 ${activeSet.length.toLocaleString()}건 · 예산 안 ${inBudget.length.toLocaleString()}건`, W-padR, H-padB-6);
+  drawStrip();
+}
+function drawStrip(){
+  sctx.clearRect(0,0,W,SH);
+  const days = new Array(nDays+1).fill(0), inb = new Array(nDays+1).fill(0);
+  for(const p of visible){ for(const r of p.rounds){ const a=Math.max(0,Math.floor((r.bgn-tMin)/DAY)), b=Math.min(nDays,Math.floor((r.end-tMin)/DAY)); for(let d=a;d<=b;d++){ days[d]++; if(r.price<=budget) inb[d]++; } } }
+  const mx = Math.max(1,...days); const w=(W-padL-padR)/(nDays+1);
+  for(let d=0;d<=nDays;d++){ const x=padL+d*w; const h=days[d]/mx*(SH-16); sctx.fillStyle='#22304A'; sctx.fillRect(x,SH-12-h,Math.max(1,w-0.5),h); const h2=inb[d]/mx*(SH-16); sctx.fillStyle='#B45309'; sctx.fillRect(x,SH-12-h2,Math.max(1,w-0.5),h2); }
+  sctx.fillStyle='#5F6E85'; sctx.font='10px "IBM Plex Mono",monospace'; sctx.textAlign='left'; sctx.textBaseline='bottom'; sctx.fillText('일별 입찰창 열린 물건 수 (주황 = 예산 안)', padL, SH-1);
+  const xT=X(t); sctx.strokeStyle='rgba(255,179,71,.85)'; sctx.beginPath(); sctx.moveTo(xT,0); sctx.lineTo(xT,SH-12); sctx.stroke();
+}
+function animate(now){ reveal = reduce?1:Math.min(1,(now-revealStart)/1800); draw(); if(reveal<1) rafId=requestAnimationFrame(animate); else { rafId=null; } }
+
+// ─── 인터랙션 ───
+let dragging=false;
+function nearest(mx,my){ // 머리 우선, 다음 궤적
+  let best=null, bd=12;
+  for(const p of activeSet){ const d=Math.hypot(X(t)-mx, Y(p.st.ratio+p.jit)-my); if(d<bd){bd=d;best=p;} }
+  if(best) return best; bd=6;
+  for(const p of visible){ for(const r of p.rounds){ const y=Y(r.ratio+p.jit); const x1=X(r.bgn), x2=X(r.end); if(mx>=x1-3&&mx<=x2+3&&Math.abs(y-my)<bd){ bd=Math.abs(y-my); best=p; } } }
+  return best;
+}
+const tip=$('tip');
+function showTip(p, x, y){ const s=p.st; const r=s.cur; tip.innerHTML=`<b>${esc(p.name||p.id)}</b><div class="m">${esc(p.id)} · ${esc(p.sido)} ${esc(p.sgg)} · ${esc(p.usageS)} · 유찰 ${p.usbdNft}회</div>${r?`<div>${esc(r.nsq)}회차 <span class="num">${wonFull(r.price)}</span> (감정가 대비 <span class="num">${pct(r.ratio,1)}</span>)${s.active?' · 입찰창 열림':''}</div><div class="m">${fmtMD(r.bgn)} ~ ${fmtMD(r.end)} · 감정가 ${won(p.apsl)}</div>`:`<div class="m">이 날짜에는 아직 회차 시작 전 · 첫 회차 ${fmtMD(p.rounds[0].bgn)}</div>`}`; tip.style.display='block'; tip.style.left=Math.min(x+14, window.innerWidth-tip.offsetWidth-10)+'px'; tip.style.top=Math.min(y+14, window.innerHeight-tip.offsetHeight-10)+'px'; }
+cv.addEventListener('pointerdown', e=>{ const rect=cv.getBoundingClientRect(); const mx=e.clientX-rect.left, my=e.clientY-rect.top; const p=nearest(mx,my); if(p){ pinned = pinned===p?null:p; renderDetail(); draw(); return; } dragging=true; cv.setPointerCapture(e.pointerId); setT(invX(mx)); });
+cv.addEventListener('pointermove', e=>{ const rect=cv.getBoundingClientRect(); const mx=e.clientX-rect.left, my=e.clientY-rect.top; if(dragging){ setT(invX(mx)); return; } const p=nearest(mx,my); if(p!==hover){ hover=p; draw(); } if(p) showTip(p,e.clientX,e.clientY); else tip.style.display='none'; cv.style.cursor = p?'pointer':'ew-resize'; });
+cv.addEventListener('pointerup', ()=>{ dragging=false; }); cv.addEventListener('pointerleave', ()=>{ hover=null; tip.style.display='none'; draw(); });
+strip.addEventListener('pointerdown', e=>{ const rect=strip.getBoundingClientRect(); setT(invX(e.clientX-rect.left)); });
+function setT(ms){ t=dayFloor(Math.min(Math.max(ms,tMin),tMax)+DAY/2); $('date').value=Math.round((t-tMin)/DAY); update(); }
+let playing=false, playTimer=null;
+$('play').addEventListener('click', ()=>{ playing=!playing; $('playIcon').innerHTML = playing? '<rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/>' : '<path d="M3 2l11 6-11 6z"/>'; if(playing){ if(t>=tMax-DAY) setT(tMin); playTimer=setInterval(()=>{ if(t>=tMax){ playing=false; clearInterval(playTimer); $('playIcon').innerHTML='<path d="M3 2l11 6-11 6z"/>'; return; } setT(t+DAY); }, 90); } else clearInterval(playTimer); });
+window.addEventListener('keydown', e=>{ if(e.target.tagName==='INPUT') return; if(e.key==='ArrowRight') setT(t+DAY); if(e.key==='ArrowLeft') setT(t-DAY); if(e.key===' '){ e.preventDefault(); $('play').click(); } });
+
+// ─── 타일·보드·상세 ───
+function update(){
+  recompute();
+  $('dateVal').textContent = fmtD(t); $('budgetVal').textContent = won(budget);
+  const apslSum = activeSet.reduce((s,p)=>s+p.apsl,0), lowSum = activeSet.reduce((s,p)=>s+p.st.price,0);
+  const avgRatio = activeSet.length? activeSet.reduce((s,p)=>s+p.st.ratio,0)/activeSet.length : null;
+  const soon = visible.filter(p=>!p.st.inBudget && p.rounds.some(r=>r.bgn>t && r.bgn<=t+7*DAY && r.price<=budget)).length;
+  const cheapest = inBudget.length? inBudget[0] : null;
+  $('tiles').innerHTML = [
+    ['입찰창 열린 물건', activeSet.length.toLocaleString(), `표시 ${visible.length.toLocaleString()}건 중, 기준일 당일`],
+    ['예산 안', inBudget.length.toLocaleString(), `최저입찰가 ≤ ${won(budget)}`, 'amber'],
+    ['7일 내 예산 진입', soon.toLocaleString(), '다음 저감 회차에 예산 안으로'],
+    ['평균 감정가 대비', pct(avgRatio,1), '입찰창 열린 물건 기준'],
+    ['감정가 총액 → 최저가 총액', `${won(apslSum)} → ${won(lowSum)}`, apslSum? `총 ${pct(100-lowSum/apslSum*100,0)} 할인 상태` : ''],
+    ['가장 깊은 할인', cheapest? pct(100-cheapest.st.ratio,0) : '—', cheapest? `${cheapest.sido} ${cheapest.usageS} · ${won(cheapest.st.price)}` : '예산 안 물건 없음'],
+  ].map(([l,v,s,c])=>`<div class="tile"><span class="l">${l}</span><span class="v ${c||''}">${v}</span><span class="s">${esc(s)}</span></div>`).join('');
+  $('boardSub').textContent = `${fmtMD(t)} 기준 ${inBudget.length}건 · 할인 깊은 순`;
+  $('board').innerHTML = inBudget.slice(0,25).map((p,i)=>`<tr data-id="${esc(p.id)}" class="${p===pinned?'pin':''}"><td class="num">${i+1}</td><td><div class="nm">${esc(p.name||p.id)}</div><div class="sub2 num">${esc(p.id)}</div></td><td>${esc(p.sido)} ${esc(p.sgg)}<div class="sub2">${esc(p.usageS)} · 유찰 ${p.usbdNft}회</div></td><td class="r num">${wonFull(p.st.price)}</td><td class="r"><span class="disc">${pct(p.st.ratio,1)}</span><div class="sub2 num">감정 ${won(p.apsl)}</div></td><td class="r num">${esc(p.st.cur.nsq)}<div class="sub2">${fmtMD(p.st.cur.bgn)}~${fmtMD(p.st.cur.end)}</div></td></tr>`).join('') || `<tr><td colspan="6" class="empty">이 날짜·예산·필터에 해당하는 물건이 없습니다. 날짜를 뒤로 옮기거나 예산을 올려보세요.</td></tr>`;
+  renderDetail(); if(!rafId) draw();
+}
+$('board').addEventListener('click', e=>{ const tr=e.target.closest('tr[data-id]'); if(!tr) return; pinned = props.find(p=>p.id===tr.dataset.id)||null; renderDetail(); draw(); });
+function renderDetail(){
+  const p=pinned; const el=$('detail');
+  if(!p){ el.innerHTML=`<div class="panel-h"><h2>물건 상세</h2><span class="sub">궤적이나 표의 행을 클릭하면 고정됩니다</span></div><div class="empty">아직 선택된 물건이 없습니다.</div>`; return; }
+  const s=p.st||stateAt(p,t);
+  el.innerHTML = `<div class="panel-h"><h2>물건 상세</h2><button class="chip" id="unpin">고정 해제</button></div><div class="card">
+    <h3>${esc(p.name||p.id)}</h3><div class="meta"><span class="num">${esc(p.id)}</span><span>${esc(p.sido)} ${esc(p.sgg)}</span><span>${esc(p.usageM)} › ${esc(p.usageS)}</span><span>공고 <span class="num">${esc(p.pbanc)}</span></span></div>
+    <dl class="kv"><div><dt>감정가</dt><dd>${wonFull(p.apsl)}</dd></div><div><dt>유찰</dt><dd>${p.usbdNft}회</dd></div><div><dt>${fmtMD(t)} 기준 최저가</dt><dd>${s.cur?wonFull(s.cur.price):'회차 시작 전'}</dd></div><div><dt>감정가 대비</dt><dd>${s.cur?pct(s.cur.ratio,1):'—'}</dd></div></dl>
+    <div class="scroll"><table class="rounds"><thead><tr><th>회차</th><th>입찰 기간</th><th class="r">최저입찰가</th><th class="r">비율</th></tr></thead><tbody>${p.rounds.map(r=>`<tr class="${r===s.cur?'now':(r.end<t?'past':'')}"><td>${esc(r.nsq)}</td><td>${fmtMD(r.bgn)} ~ ${fmtMD(r.end)}</td><td class="r">${wonFull(r.price)}</td><td class="r">${pct(r.ratio,1)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="sub2" style="margin:10px 0 0">예산 ${won(budget)} 진입 회차: ${(()=>{const r=p.rounds.find(r=>r.price<=budget); return r? `<b class="disc">${esc(r.nsq)}회차 (${fmtMD(r.bgn)})</b>` : '예약된 회차 내 없음';})()} · <a href="https://www.onbid.co.kr/op/cta/ctaDetail.do?cltrMngNo=${encodeURIComponent(p.id)}" target="_blank" rel="noopener">온비드에서 보기</a></p></div>`;
+  $('unpin').onclick=()=>{ pinned=null; renderDetail(); draw(); };
+}
+$('foot').innerHTML = `세로축은 감정가 대비 최저입찰가 비율, 가로축은 입찰 기간입니다. 겹침을 줄이기 위해 물건마다 ±4%p 의 고정 흔들림을 줬고, 궤적이 겹칠수록 밝게 보입니다(가산 합성). 압수물 등 동산은 제외하고 부동산만 표시합니다. 취소 회차는 제외했고, 주소는 온비드 API 가 일부 마스킹(****)한 그대로입니다. 데이터: 온비드 Open API 공고목록·공고물건 (<code>scripts/snapshot_market.py</code>), 페이지: <code>scripts/build_meteor.py</code>. 실제 입찰은 onbid.co.kr 에서 진행합니다.`;
+
+// ─── 시작 ───
+recompute(); update(); resize(); window.addEventListener('resize', resize);
+if(!reduce){ revealStart=performance.now(); rafId=requestAnimationFrame(animate); } else { reveal=1; draw(); }
+})();
+</script>
