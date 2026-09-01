@@ -43,7 +43,7 @@
 아파트 물건의 경우 MOLIT 실거래가 조회(4-1) 직후 실행:
 
 ```bash
-python3 /Users/leo-myung/onbid/scripts/fetch_naver_listings.py \
+python3 scripts/fetch_naver_listings.py \
     --keyword "{단지명}" --lawd-cd "{5자리코드}" \
     --area {전용면적} --apsl {감정가} \
     --molit-avg {MOLIT평균} --cltr-mng-no "{물건관리번호}"
@@ -109,7 +109,7 @@ cltrMngNo: "2025-1200-015749"
 import requests, os
 from dotenv import load_dotenv
 
-load_dotenv('/Users/leo-myung/onbid/.env')
+load_dotenv(ROOT / '.env')  # ROOT = 저장소 루트 (scripts/common.py 의 ROOT 사용 권장)
 
 def get_land_transactions(lawdCd, dealYmd):
     url = "https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade"

@@ -1,0 +1,11 @@
+# 온비드 공매 분석 하네스 — Python 의존성
+# 설치: python3 -m pip install -r requirements.txt   (Homebrew Python 은 --user 또는 venv 권장)
+requests>=2.31
+python-dotenv>=1.0
+
+# PDF 서류 분석 (document-analysis 스킬) — 필요 시
+pdfplumber>=0.11
+PyMuPDF>=1.24
+
+# 테스트
+pytest>=8

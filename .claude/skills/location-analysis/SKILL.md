@@ -47,7 +47,7 @@ Step 2(MOLIT 실거래가)가 완료된 직후 실행한다.
 - `molit_trade_avg`: Step 2에서 얻은 MOLIT 실거래 평균 (없으면 생략)
 
 ```bash
-python3 /Users/leo-myung/onbid/scripts/fetch_naver_listings.py \
+python3 scripts/fetch_naver_listings.py \
     --keyword "{apt_keyword}" \
     --lawd-cd "{lawd_cd}" \
     --area {target_area} \

@@ -6,6 +6,17 @@
 ## 왜 필요한가
 2026-07-26, `search_properties.py`가 온비드 물건의 여러 예약 회차 중 **가장 먼 미래의 최다할인 회차**(pbctNsq 최댓값)를 "최신 회차"로 잘못 골라, 아직 존재하지도 않을 가격을 "지금 낙찰 가능한 가격"으로 제시한 채 ROI 분석까지 진행된 사고가 있었다. 이 파이프라인에는 이런 오류를 잡아낼 단계가 없었다 — 검색 결과를 만든 에이전트와, 그걸 그대로 믿고 계산한 에이전트가 같은 가정을 공유했기 때문이다. 이 에이전트는 그 가정 자체를 의심하는 역할을 맡는다.
 
+## 실행 방법 (2026-09-02 이후)
+체크리스트 1~4는 `scripts/verify_results.py` 가 결정론적으로 수행한다. **먼저 스크립트를 돌리고**, 그 보고서를 읽어 판단·보고만 한다.
+
+```bash
+python3 scripts/verify_results.py phase1            # 회차 선택(API 재조회)·가격 논리·용도 분류 → verification_report_phase1.json
+python3 scripts/verify_results.py phase1 --offline  # API 없이 결과 파일의 rounds 배열로만 검증
+python3 scripts/verify_results.py phase3            # 03_bid_strategy_*.json 의 감정가·최저가 대조 + roi_calculator 재계산 대조
+```
+종료코드 1 = FAIL 존재. WARN 은 사용자 판단 사항으로 보고서에 그대로 옮긴다.
+스크립트가 다루지 않는 항목(예: 신규 필드, 정성 판단)만 아래 체크리스트를 수동으로 적용한다.
+
 ## 검증 체크리스트
 
 ### 1. 회차 선택 검증 (온비드 물건 한정)
@@ -27,7 +38,7 @@
 - 파이프라인 어디선가 `resultCode`가 `00`이 아닌 응답을 무시하지 않고 명시적으로 처리했는지(스킵/에러기록) 로그로 확인
 
 ## 출력 프로토콜
-`_workspace/verification_report_{날짜}.json`:
+`_workspace/verification_report_phase1.json` / `verification_report_phase3.json` (스크립트 출력 스키마):
 ```json
 {
   "verified_at": "2026-07-26T19:00:00",
@@ -36,10 +47,9 @@
     {
       "cltrMngNo": "2023-06614-001",
       "checks": {
-        "round_selection": "PASS",
-        "price_logic": "PASS",
-        "usage_category": "PASS",
-        "downstream_consistency": "PASS"
+        "round_selection": {"status": "PASS", "detail": "10개 회차 중 034 채택 확인 [source=api]"},
+        "price_logic":     {"status": "PASS", "detail": "최저가/감정가 = 10.0%"},
+        "usage_category":  {"status": "SKIP", "detail": "용도 필터 없음"}
       },
       "verdict": "PASS"
     }

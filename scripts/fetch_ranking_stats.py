@@ -23,17 +23,16 @@
 import argparse
 import json
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import unquote
 
 import requests
-from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parent.parent
-load_dotenv(ROOT / '.env')
-KEY = unquote(os.getenv('ONBID_API_KEY', ''))
-BASE = "https://apis.data.go.kr/B010003"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import ONBID_BASE as BASE, get_key, parse_onbid_response  # noqa: E402
+
+KEY = get_key('ONBID_API_KEY', required=False)
 
 CLTR_DIV_CHOICES = ['부동산', '동산', '자동차']
 
@@ -48,19 +47,7 @@ def call(svc, op, params, rows=10):
     }
     r = requests.get(f"{BASE}/{svc}/{op}", params=p, timeout=15)
     r.raise_for_status()
-    data = r.json()
-    header = data.get('header') or data.get('result') or {}
-    rc = header.get('resultCode', '?')
-    msg = header.get('resultMsg', '?')
-    if rc == '03':
-        return [], f"데이터 없음 ({msg})"
-    if rc not in ('00', '', None):
-        return None, f"API 오류 {rc}: {msg}"
-    items_raw = data.get('body', {}).get('items', {})
-    items = items_raw.get('item', []) if isinstance(items_raw, dict) else (items_raw or [])
-    if not isinstance(items, list):
-        items = [items] if items else []
-    return items, None
+    return parse_onbid_response(r.json())
 
 
 def cmd_rank(args, svc, op, label):

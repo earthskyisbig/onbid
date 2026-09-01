@@ -6,8 +6,8 @@
 ## 작업 원칙
 - .env에서 ONBID_API_KEY를 로드하여 API 호출한다 (python-dotenv 사용)
 - **API**: `https://apis.data.go.kr/B010003/OnbidRlstDtlSrvc2/getRlstDtlInf2` (SVC-API-004)
-- **필수 파라미터**: `cltrMngNo` (물건관리번호, 형식: YYYY-NNNN-NNNNNN)
-- **응답 루트**: `result` 키 사용 (response 아님)
+- **필수 파라미터**: `cltrMngNo` (물건관리번호, 형식: YYYY-NNNN-NNNNNN). 한 물건의 **모든 예약 회차**가 items 로 오므로 numOfRows 는 100 이상으로 준다
+- **응답 루트**: `header` + `body` (response 래퍼 없음). 오류 응답만 `result` 키로 올 수 있음 — `scripts/common.py: parse_onbid_response` 가 둘 다 처리
 - API Rate Limit: 초당 10 TPS — 복수 물건 조회 시 requests 사이에 0.2초 sleep
 - resultCode가 "00"(NORMAL_CODE)이 아니면 에러를 파일에 기록하고 계속 진행
 - 현재 입찰중·입찰예정 부동산만 조회 가능 (만료 물건은 NODATA_ERROR)
@@ -17,7 +17,7 @@
 
 ### 방법 A: 필터 기반 검색 (search_properties.py 사용)
 ```bash
-python3 /Users/leo-myung/onbid/scripts/search_properties.py \
+python3 scripts/search_properties.py \
     --region "경기도 수원시" \
     --type 아파트 \
     --area-min 59 --area-max 85 \
@@ -30,14 +30,14 @@ python3 /Users/leo-myung/onbid/scripts/search_properties.py \
 
 ### 방법 B: 물건관리번호 직접 조회
 ```bash
-python3 /Users/leo-myung/onbid/scripts/search_properties.py \
+python3 scripts/search_properties.py \
     --ids 2024-1100-084555 2025-NNNN-NNNNNN
 ```
 
 공고관리번호가 없으면 사용자에게 온비드(onbid.co.kr)에서 조회 후 제공 요청.
 
-> **목록 API 미구독 시**: `--ids` 없이 필터만 사용하면 403 오류.  
-> data.go.kr에서 "한국자산관리공사_온비드 공고목록 조회서비스" 구독 필요.
+> 목록 API(`OnbidPbancListSrvc2/getPbancList2`)와 공고상세(`OnbidPbancCltrDtlSrvc2/getPbancCltrInf2`)는 승인 완료 — `--ids` 없이 필터 검색이 동작한다(모드 B, 공고 100건당 약 2~3분).
+> 결과 파일 생성 직후 반드시 `python3 scripts/verify_results.py phase1` 로 회차·가격·용도를 검증한다 (종료코드 1이면 FAIL 있음).
 
 ## 출력 프로토콜
 `_workspace/01_search_results.json` 저장:
@@ -48,20 +48,27 @@ python3 /Users/leo-myung/onbid/scripts/search_properties.py \
   "filtered_count": 3,
   "properties": [
     {
-      "pbancMngNo": "202406-21411-00",
-      "onbidPbancNo": "...",
+      "cltrMngNo": "2024-18146-006",
+      "pbctCdtnNo": 6008760,
+      "pbctNsq": "034",
       "onbidCltrNm": "물건명",
       "cltrAdr": "주소",
-      "prptDivNm": "재산유형명",
-      "apslEvlAmt": 302872850,
-      "lowstBidPrcIndctCont": 302872850,
-      "apslPrcCtrsLowstBidRto": 80,
-      "usbdNft": 2,
-      "cltrBidBgngDt": "202406041900",
-      "cltrBidEndDt": "202408051900",
-      "pbctStatNm": "입찰진행중",
-      "priority_score": 85,
-      "priority_reason": "유찰 2회, 감정가 대비 80% 할인"
+      "lctnSdnm": "서울특별시", "lctnSggnm": "은평구", "lctnEmdNm": "대조동",
+      "prptDivNm": "압류재산",
+      "cltrUsgSclsCtgrNm": "다세대주택", "cltrUsgMclsCtgrNm": "주거용건물",
+      "area_sqm": 39.94,
+      "apslEvlAmt": 424000000.0,
+      "lowstBidPrc": 42400000.0,
+      "apslRatio": 10.0,            // lowstBidPrc/apslEvlAmt 직접 계산(%). API 필드는 apslRatio_api 에 보존(자주 null)
+      "discount_pct": 90.0,
+      "usbdNft": 10,
+      "pbctStatCd": "0001", "pbctStatNm": "입찰준비중",
+      "cltrBidBgngDt": "202609281400", "cltrBidEndDt": "202609301700",
+      "bid_window": "upcoming",     // open | upcoming | ended
+      "days_to_bid_end": 28,
+      "round_count": 10,
+      "rounds": [ {"pbctNsq": "034", "pbctCdtnNo": 6008760, "cltrBidBgngDt": "...", "cltrBidEndDt": "...", "lowstBidPrc": 42400000.0}, "... 이후 예약 회차(저감 스케줄)" ],
+      "priority_score": 80
     }
   ]
 }
@@ -77,7 +84,7 @@ python3 /Users/leo-myung/onbid/scripts/search_properties.py \
 import requests, json, os, time
 from dotenv import load_dotenv
 
-load_dotenv('/Users/leo-myung/onbid/.env')
+load_dotenv(ROOT / '.env')  # ROOT = 저장소 루트 (scripts/common.py 의 ROOT 사용 권장)
 
 def fetch_property(cltr_mng_no, pbct_cdtn_no=None):
     """

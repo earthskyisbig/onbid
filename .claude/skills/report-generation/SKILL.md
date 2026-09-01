@@ -9,24 +9,33 @@ description: 공매 투자 분석의 모든 결과(검색/서류분석/입지분
 
 ### Step 1: 결과 파일 수집
 ```python
-import json, glob, os
+import json, glob, os, re
 from datetime import datetime
 
 workspace = '_workspace'
+ID_RE = re.compile(r'_(\d{4}-\d+-\d+)\.json$')   # 파일명 끝의 cltrMngNo 추출
+
+def load_by_id(pattern):
+    out = {}
+    for f in glob.glob(f'{workspace}/{pattern}'):
+        m = ID_RE.search(os.path.basename(f))
+        if m:
+            out[m.group(1)] = json.load(open(f, encoding='utf-8'))
+    return out
 
 def load_all_results():
-    search = json.load(open(f'{workspace}/01_search_results.json'))
-    doc_analyses = {f.split('_')[3].replace('.json',''): json.load(open(f)) 
-                    for f in glob.glob(f'{workspace}/02_doc_analysis_*.json')}
-    loc_analyses = {f.split('_')[3].replace('.json',''): json.load(open(f)) 
-                    for f in glob.glob(f'{workspace}/02_location_analysis_*.json')}
-    strategies = {f.split('_')[3].replace('.json',''): json.load(open(f)) 
-                  for f in glob.glob(f'{workspace}/03_bid_strategy_*.json')}
-    return search, doc_analyses, loc_analyses, strategies
+    search = json.load(open(f'{workspace}/01_search_results.json', encoding='utf-8'))
+    doc_analyses = load_by_id('02_doc_analysis_*.json')
+    loc_analyses = load_by_id('02_location_analysis_*.json')
+    strategies   = load_by_id('03_bid_strategy_*.json')      # scripts/roi_calculator.py scenarios 출력 스키마
+    verifications = {p: json.load(open(p, encoding='utf-8'))
+                     for p in glob.glob(f'{workspace}/verification_report_*.json')}
+    return search, doc_analyses, loc_analyses, strategies, verifications
 ```
 
 ### Step 2: 보고서 생성 (Markdown)
-물건별로 섹션 생성 후 통합
+물건별로 섹션 생성 후 통합. 수익성 표의 숫자는 `03_bid_strategy_*.json` (roi_calculator.py 출력)에서 **그대로 옮긴다** — 보고서 단계에서 재계산·반올림하지 않는다.
+검증 보고서(`verification_report_phase1/phase3.json`)에 WARN/FAIL 이 있으면 "데이터 검증 결과" 섹션에 원문 그대로 인용한다.
 
 ### Step 3: 파일 저장
 - `_workspace/final_report_{YYYYMMDD}.md`

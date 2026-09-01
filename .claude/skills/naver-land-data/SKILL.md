@@ -13,7 +13,7 @@ location-analysis Step 2.5에서 MOLIT 실거래가 조회(Step 2) 직후 호출
 
 ### 기본 실행
 ```bash
-python3 /Users/leo-myung/onbid/scripts/fetch_naver_listings.py \
+python3 scripts/fetch_naver_listings.py \
     --keyword "{apt_keyword}" \
     --lawd-cd "{lawd_cd_5자리}" \
     --area {target_area} \

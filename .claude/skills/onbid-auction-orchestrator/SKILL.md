@@ -59,12 +59,12 @@ Agent(
   subagent_type: "general-purpose",
   model: "opus",
   prompt: """
-  data-verifier 에이전트 정의(.claude/agents/data-verifier.md)의
-  "1. 회차 선택 검증", "2. 가격 논리성 검증", "3. 용도 분류 일치 검증"을
-  _workspace/01_search_results.json의 모든 물건에 대해 수행하라.
+  먼저 `python3 scripts/verify_results.py phase1` 을 실행하라 (API 재조회로 회차·가격·용도 검증,
+  결과는 _workspace/verification_report_phase1.json, 종료코드 1 = FAIL 존재).
+  그 보고서를 읽고 data-verifier 에이전트 정의(.claude/agents/data-verifier.md)에 따라
+  스크립트가 다루지 않는 항목만 추가로 점검하라.
 
-  FAIL이 있으면 해당 물건을 목록에서 제외하거나 명확히 표기하고,
-  _workspace/verification_report_phase1.json에 결과를 저장하라.
+  FAIL 물건은 목록에서 제외하거나 명확히 표기하고, WARN 은 원문 그대로 사용자에게 전달하라.
   FAIL이 있으면 Phase 2로 넘어가기 전에 사용자에게 먼저 보고하라.
   """
 )
@@ -124,15 +124,14 @@ Agent(
   model: "opus",
   prompt: """
   bid-analysis 스킬을 사용하여 각 물건의 입찰가와 수익성을 분석하라.
-  
+  수치 계산은 반드시 `python3 scripts/roi_calculator.py scenarios ... --output _workspace/03_bid_strategy_{cltrMngNo}.json`
+  으로 수행하고, 해석 필드(propertyName/analysisNotes/qualitativeRisks)만 추가하라. 수치를 손으로 만들지 마라.
+
   입력 파일:
-  - _workspace/01_search_results.json
-  - _workspace/02_doc_analysis_*.json (각 물건별)
-  - _workspace/02_location_analysis_*.json (각 물건별)
-  
-  투자자 목표: {investor_goal}
-  
-  각 물건별 결과를 _workspace/03_bid_strategy_{cltrMngNo}.json에 저장하라.
+  - _workspace/01_search_results.json (apslEvlAmt, lowstBidPrc, rounds 를 그대로 사용)
+  - _workspace/02_doc_analysis_*.json, _workspace/02_location_analysis_*.json, _workspace/market_*.json
+
+  투자자 목표: {investor_goal}  (보유주택 수, 대출 계획 포함)
   """
 )
 ```
@@ -146,13 +145,11 @@ Agent(
   subagent_type: "general-purpose",
   model: "opus",
   prompt: """
-  data-verifier 에이전트 정의(.claude/agents/data-verifier.md)의
-  "4. 하위 단계 입력값 대조"를 수행하라.
-
-  _workspace/03_bid_strategy_*.json의 appraisalValue/bidPrice 기준값이
-  _workspace/01_search_results.json 원본 값과 정확히 일치하는지 물건별로 대조하고,
-  _workspace/verification_report_phase3.json에 결과를 저장하라.
-  FAIL이 있으면 Phase 4로 넘어가기 전에 사용자에게 먼저 보고하라.
+  `python3 scripts/verify_results.py phase3` 을 실행하라
+  (03_bid_strategy_*.json 의 appraisalValue/minBidPrice 를 01_search_results.json 원본과 원 단위로 대조하고,
+  각 시나리오 ROI 를 roi_calculator 로 재계산해 대조. 결과 _workspace/verification_report_phase3.json).
+  보고서를 읽고 FAIL 이 있으면 Phase 4로 넘어가기 전에 사용자에게 먼저 보고하라.
+  "roi_calculator.py 스키마 아님" WARN 은 bid-strategist 가 스크립트를 쓰지 않았다는 뜻 — Phase 3 재실행.
   """
 )
 ```
@@ -222,6 +219,19 @@ _workspace/final_report_{날짜}_summary.md
       .env에 ONBID_API_KEY 없음
 예상: Phase 1에서 에러 감지 → 설정 안내 메시지 → 중단
 ```
+
+## 스크립트 (전부 저장소 루트에서 실행, `.env` 자동 로드)
+| 스크립트 | 역할 | 테스트 |
+|---------|------|-------|
+| `scripts/search_properties.py` | Phase 1 검색 (모드A `--ids`, 모드B 필터) | `tests/test_search_properties.py` |
+| `scripts/verify_results.py phase1\|phase3` | Phase 1.5 / 3.5 검증 | `tests/test_verify_results.py` |
+| `scripts/fetch_market_data.py` | 국토부 실거래가 | `tests/test_market_and_naver.py` |
+| `scripts/fetch_naver_listings.py` | 네이버 호가 | 〃 |
+| `scripts/roi_calculator.py` | Phase 3 ROI (auction/gap/scenarios) | `tests/test_roi_calculator.py` |
+| `scripts/fetch_ranking_stats.py` | 순위·통계·입찰결과 API | — |
+| `scripts/common.py` | 경로·키·API 호출 공통 | 〃 |
+
+`python3 -m pytest` 로 전체 테스트 (네트워크 불필요).
 
 ## API 레퍼런스
 `references/api-spec.md` — 전체 응답 필드 정의

@@ -1,5 +1,8 @@
 # 온비드 Open API 명세
 
+> **실제 코드가 쓰는 엔드포인트는 차세대(Srvc2) 버전이다** — `OnbidPbancListSrvc2/getPbancList2`, `OnbidPbancCltrDtlSrvc2/getPbancCltrInf2`, `OnbidRlstDtlSrvc2/getRlstDtlInf2`.
+> 아래는 원 docx 가이드(SVC-API-018, 구버전) 필드 정의로, 응답 필드명은 Srvc2 와 동일하다. `scripts/search_properties.py` / `scripts/common.py` 참조.
+
 ## 서비스 정보
 - **서비스ID**: SVC-API-018
 - **서비스명**: 온비드 공고상세 물건정보 조회서비스 (OnbidPbancCltrDtlSrvc)

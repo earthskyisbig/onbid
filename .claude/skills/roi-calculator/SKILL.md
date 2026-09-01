@@ -3,6 +3,18 @@
 부동산 투자 ROI 계산 스킬. 경매/공매와 갭투자 두 가지 모드를 지원한다.
 계산 로직은 `references/auction-formulas.md`, `references/gap-formulas.md`를 따른다.
 
+## 구현체 (반드시 사용)
+
+```bash
+python3 scripts/roi_calculator.py auction   --appraisal 425000000 --bid 382500000 --sale 409000000 --months 6 [--acq-tax-rate 0.011 --assumed-rights 0 --loan 0 ...]
+python3 scripts/roi_calculator.py gap       --purchase 409000000 --jeonse 318000000 --sale 430000000 --months 24
+python3 scripts/roi_calculator.py scenarios --appraisal ... --min-bid ... --fair-value ... [비용 옵션] --output _workspace/03_bid_strategy_{id}.json
+# 공통: --json-in params.json (camelCase 키), --format md|json, --output 경로
+```
+
+아래 STEP 1~5 는 스크립트가 그대로 구현한 명세다 (`tests/test_roi_calculator.py` 가 references 의 예시값으로 검증).
+LLM 은 입력값을 고르고 결과를 해석한다. 수식을 손으로 계산하지 않는다.
+
 ---
 
 ## 트리거

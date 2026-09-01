@@ -3,7 +3,7 @@
 네이버 부동산 호가 조회 스크립트
 
 사용법:
-    python3 fetch_naver_listings.py \
+    python3 scripts/fetch_naver_listings.py \
         --keyword 일신아파트 \
         --lawd-cd 41650 \
         --area 49.92 \
@@ -11,11 +11,14 @@
         --molit-avg 95000000 \
         --cltr-mng-no 2026-0200-106923
 """
-import argparse, json, os, re, random, time
+import argparse, json, os, re, random, sys, time
 from datetime import datetime
-from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv('/Users/leo-myung/onbid/.env')
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import WORKSPACE, load_env  # noqa: E402
+
+load_env()
 
 NAVER_HEADERS = {
     "User-Agent": (
@@ -231,9 +234,7 @@ def main():
     parser.add_argument("--output",       default=None, help="출력 JSON 경로")
     args = parser.parse_args()
 
-    out_path = args.output or (
-        f"/Users/leo-myung/onbid/_workspace/naver_listings_{args.cltr_mng_no}.json"
-    )
+    out_path = args.output or str(WORKSPACE / f"naver_listings_{args.cltr_mng_no}.json")
 
     print(f"\n네이버 호가 조회: {args.keyword} / lawd_cd={args.lawd_cd} / 면적={args.area}㎡")
 
