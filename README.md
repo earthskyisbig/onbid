@@ -22,6 +22,7 @@ Phase 2   scripts/analyze_documents.py + location-analysis (fetch_market_data.py
 Phase 3   scripts/roi_calculator.py scenarios → 03_bid_strategy_{id}.json      (보수/기준/공격 + 판정)
 Phase 3.5 scripts/verify_results.py phase3  → verification_report_phase3.json   (원본 대조 + ROI 재계산)
 Phase 4   report-generation                 → final_report_{날짜}.md
+보기      scripts/build_dashboard.py          → _workspace/dashboard.html (브라우저로 열기, 또는 아티팩트 게시)
 ```
 
 오케스트레이션 정의: `.claude/skills/onbid-auction-orchestrator/SKILL.md`. Claude Code 에서 "공매 분석해줘" 로 트리거된다.
@@ -35,6 +36,7 @@ Phase 4   report-generation                 → final_report_{날짜}.md
 | `roi_calculator.py` | 경매 ROI / 갭투자 ROE / 3시나리오 / 취득세율 | `python3 scripts/roi_calculator.py scenarios --appraisal 2.5e8 --min-bid 2e8 --fair-value 2.55e8 --kind house --area-sqm 59` |
 | `fetch_market_data.py` | 국토부 실거래가 (`--kind apt\|offi\|rh\|sh\|land\|shop`) | `python3 scripts/fetch_market_data.py --kind rh --keyword 호안빌 --lawd-cd "서울 은평구" --area 39.94` |
 | `analyze_documents.py` | 감정평가서·재산명세서 PDF 분석 골격 | `python3 scripts/analyze_documents.py --cltr-mng-no 2026-16156-004` |
+| `build_dashboard.py` | `_workspace/` 산출물을 한 페이지 대시보드 HTML 로 (오프라인, 데이터 내장) | `python3 scripts/build_dashboard.py` → `_workspace/dashboard.html` |
 | `fetch_naver_listings.py` | 네이버 부동산 호가 | `python3 scripts/fetch_naver_listings.py --keyword 일신 --lawd-cd 41650 --area 49.92` |
 | `fetch_ranking_stats.py` | 조회수/관심/저감률 순위, 입찰결과, 용도별 통계 | `python3 scripts/fetch_ranking_stats.py discount-rank --cltr-div 부동산` |
 | `common.py` | 경로·키·API 호출·응답 파싱 공통 | (라이브러리) |

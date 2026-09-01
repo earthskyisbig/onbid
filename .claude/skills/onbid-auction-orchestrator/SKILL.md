@@ -181,6 +181,9 @@ Agent(
 )
 ```
 
+## Phase 5: 대시보드 (선택)
+`python3 scripts/build_dashboard.py` 로 `_workspace/dashboard.html` 을 만들고, 사용자가 웹에서 보길 원하면 Artifact 도구로 게시한다 (단일 파일, 데이터 내장, 외부 요청 없음).
+
 ## 데이터 흐름
 ```
 사용자 입력 (공고번호, 조건, PDF)
@@ -235,6 +238,7 @@ _workspace/final_report_{날짜}_summary.md
 | `scripts/fetch_naver_listings.py` | 네이버 호가 | 〃 |
 | `scripts/roi_calculator.py` | Phase 3 ROI (auction/gap/scenarios/tax — 취득세율 자동) | `tests/test_roi_calculator.py`, `tests/test_followups.py` |
 | `scripts/fetch_ranking_stats.py` | 순위·통계·입찰결과 API | — |
+| `scripts/build_dashboard.py` | 산출물 대시보드 HTML (Phase 5, `_workspace/dashboard.html`) | — |
 | `scripts/common.py` | 경로·키·API 호출 공통 | 〃 |
 
 `python3 -m pytest` 로 전체 테스트 (네트워크 불필요).
